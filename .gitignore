@@ -75,3 +75,5 @@ results/visualizations/
 results/reports/*.png
 results/metrics/*cache.json
 results/metrics/*state.json
+
+.vercel
