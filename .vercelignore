@@ -1,0 +1,33 @@
+# Vercel Deployment Ignore Rules
+# Strictly exclude raw datasets, large weights, notebooks, and temporary files
+
+# Data & Models
+data
+data/**
+dataset
+dataset/**
+models
+models/**
+sample_test_images
+sample_test_images/**
+
+# Jupyter Notebooks & Experimental Scratchpads
+notebooks
+notebooks/**
+
+# Python & Environment Artifacts
+__pycache__
+__pycache__/**
+*.pyc
+*.pyo
+.env*
+!.env.example
+
+# Large results, visualizations and test outputs
+results/visualizations
+results/visualizations/**
+results/reports/*.png
+
+# Git
+.git
+.git/**
