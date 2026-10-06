@@ -40,7 +40,7 @@ app.add_middleware(
 MODEL_API_URL = os.environ.get("MODEL_API_URL", "").rstrip("/")
 MODEL_API_KEY = os.environ.get("MODEL_API_KEY", "")
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "").strip()
-GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-1.5-flash").strip() or "gemini-1.5-flash"
+GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-2.5-flash").strip() or "gemini-2.5-flash"
 
 # System Prompt for Gemini (Scientific, Strictly Truthful, Non-Fabricating)
 SYSTEM_INSTRUCTION = (
@@ -107,7 +107,7 @@ def call_gemini_api(prompt_text: str, system_instruction: str) -> str:
     custom_model = os.environ.get("GEMINI_MODEL", "").strip()
     if custom_model:
         candidate_models.append(custom_model)
-    for m in ["gemini-1.5-flash", "gemini-2.0-flash", "gemini-1.5-pro"]:
+    for m in ["gemini-2.5-flash", "gemini-2.5-pro", "gemini-1.5-flash"]:
         if m not in candidate_models:
             candidate_models.append(m)
 
@@ -129,6 +129,7 @@ def call_gemini_api(prompt_text: str, system_instruction: str) -> str:
 
     last_error = None
     for model_name in candidate_models:
+        model_clean = model_name.replace("models/", "")
         # 1. Try official google-genai SDK
         client = get_gemini_client()
         if client is not None:
@@ -140,7 +141,7 @@ def call_gemini_api(prompt_text: str, system_instruction: str) -> str:
                     max_output_tokens=1024
                 )
                 response = client.models.generate_content(
-                    model=model_name,
+                    model=model_clean,
                     contents=prompt_text,
                     config=config
                 )
@@ -150,10 +151,10 @@ def call_gemini_api(prompt_text: str, system_instruction: str) -> str:
                 err_str = str(sdk_err).lower()
                 if "429" in err_str or "quota" in err_str or "rate limit" in err_str:
                     raise HTTPException(status_code=429, detail="AI request limit reached. Please try again later.")
-                logger.warning(f"google-genai SDK failed for {model_name}: {sdk_err}")
+                logger.warning(f"google-genai SDK failed for {model_clean}: {sdk_err}")
 
         # 2. Resilient official REST API
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={key}"
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_clean}:generateContent?key={key}"
         try:
             r = requests.post(url, headers=headers, json=payload, timeout=14)
             if r.status_code == 200:
@@ -700,7 +701,7 @@ async def get_chat_health():
         "status": "ok",
         "provider": "gemini",
         "configured": True,
-        "model": os.environ.get("GEMINI_MODEL", "gemini-1.5-flash").strip() or "gemini-1.5-flash",
+        "model": os.environ.get("GEMINI_MODEL", "gemini-2.5-flash").strip() or "gemini-2.5-flash",
         "supported_models": models_available[:5]
     }
 
