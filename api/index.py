@@ -695,41 +695,35 @@ async def get_chat_health():
         models_available = [str(e)]
 
     diagnostic = {}
-    # 1. Probe SDK
-    try:
-        from google import genai
-        from google.genai import types
-        c = genai.Client(api_key=key)
-        resp = c.models.generate_content(
-            model="gemini-2.5-flash",
-            contents="Say PONG",
-            config=types.GenerateContentConfig(temperature=0.0, max_output_tokens=10)
-        )
-        diagnostic["sdk_test"] = f"OK: {resp.text.strip() if resp else 'None'}"
-    except Exception as e:
-        diagnostic["sdk_test"] = f"FAIL: {type(e).__name__}: {str(e)[:120]}"
+    working_model = None
 
-    # 2. Probe REST
-    try:
-        rest_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={key}"
-        rest_payload = {
-            "contents": [{"parts": [{"text": "Say PONG"}]}],
-            "generationConfig": {"temperature": 0.0, "maxOutputTokens": 10}
-        }
-        r_test = requests.post(rest_url, json=rest_payload, headers={"Content-Type": "application/json"}, timeout=5)
-        if r_test.status_code == 200:
-            diagnostic["rest_test"] = f"OK: {r_test.json()['candidates'][0]['content']['parts'][0]['text'].strip()}"
-        else:
-            diagnostic["rest_test"] = f"HTTP {r_test.status_code}: {r_test.text[:120]}"
-    except Exception as e:
-        diagnostic["rest_test"] = f"FAIL: {str(e)[:120]}"
+    for m in models_available:
+        m_name = m.replace("models/", "")
+        # Probe with REST
+        try:
+            r_test = requests.post(
+                f"https://generativelanguage.googleapis.com/v1beta/models/{m_name}:generateContent?key={key}",
+                json={"contents": [{"parts": [{"text": "Say PONG"}]}]},
+                headers={"Content-Type": "application/json"},
+                timeout=4
+            )
+            if r_test.status_code == 200:
+                working_model = m_name
+                txt = r_test.json().get("candidates", [{}])[0].get("content", {}).get("parts", [{}])[0].get("text", "").strip()
+                diagnostic[f"model_{m_name}"] = f"WORKING: {txt}"
+                break
+            else:
+                diagnostic[f"model_{m_name}"] = f"HTTP {r_test.status_code}: {r_test.text[:200]}"
+        except Exception as e:
+            diagnostic[f"model_{m_name}"] = f"FAIL: {str(e)[:100]}"
 
     return {
         "status": "ok",
         "provider": "gemini",
         "configured": True,
-        "model": os.environ.get("GEMINI_MODEL", "gemini-2.5-flash").strip() or "gemini-2.5-flash",
-        "supported_models": models_available[:5],
+        "working_model": working_model,
+        "model": working_model or os.environ.get("GEMINI_MODEL", "gemini-2.5-flash").strip(),
+        "all_supported_models": models_available,
         "diagnostic": diagnostic
     }
 
