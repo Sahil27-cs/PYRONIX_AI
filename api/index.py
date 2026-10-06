@@ -169,19 +169,18 @@ def call_gemini_api(prompt_text: str, system_instruction: str) -> str:
             elif r.status_code == 403:
                 raise HTTPException(status_code=403, detail="Gemini authentication failed. Please verify GEMINI_API_KEY permissions.")
             elif r.status_code == 404:
-                # Try next candidate model
-                last_error = f"Model {model_name} not available."
+                last_error = f"Model {model_name} HTTP 404: {r.text[:200]}"
                 continue
             else:
-                last_error = f"Gemini returned status {r.status_code}."
+                last_error = f"Gemini returned status {r.status_code}: {r.text[:200]}"
                 continue
         except requests.exceptions.Timeout:
             raise HTTPException(status_code=504, detail="Gemini request timed out. Please try again.")
         except requests.exceptions.RequestException as re:
-            last_error = str(re)
+            last_error = f"Request error: {str(re)}"
             continue
 
-    raise HTTPException(status_code=502, detail=f"Gemini is temporarily unavailable. Please try again. ({last_error})")
+    raise HTTPException(status_code=502, detail=f"Gemini is temporarily unavailable. ({last_error})")
 
 
 # Load precomputed benchmarks for presets
