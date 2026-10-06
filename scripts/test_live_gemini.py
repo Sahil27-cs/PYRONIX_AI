@@ -29,14 +29,14 @@ req = urllib.request.Request(
     headers={"Content-Type": "application/x-www-form-urlencoded", "User-Agent": "Mozilla/5.0"}
 )
 try:
-    with urllib.request.urlopen(req) as resp:
+    with urllib.request.urlopen(req, timeout=30) as resp:
         res = json.loads(resp.read().decode())
         print("  Status Code:", resp.status)
         print("  Sources:", res.get("sources"))
         print("  Gemini Reply:\n  " + res.get("reply", "")[:300] + "...")
         chat_q1_pass = True
-except urllib.error.HTTPError as e:
-    print(f"  Error {e.code}: {e.read().decode()}")
+except Exception as e:
+    print(f"  Error: {e}")
     chat_q1_pass = False
 
 # [3] Test Live Query: "What does this platform do?"
@@ -48,14 +48,14 @@ req = urllib.request.Request(
     headers={"Content-Type": "application/x-www-form-urlencoded", "User-Agent": "Mozilla/5.0"}
 )
 try:
-    with urllib.request.urlopen(req) as resp:
+    with urllib.request.urlopen(req, timeout=30) as resp:
         res = json.loads(resp.read().decode())
         print("  Status Code:", resp.status)
         print("  Sources:", res.get("sources"))
         print("  Gemini Reply:\n  " + res.get("reply", "")[:300] + "...")
         chat_q2_pass = True
-except urllib.error.HTTPError as e:
-    print(f"  Error {e.code}: {e.read().decode()}")
+except Exception as e:
+    print(f"  Error: {e}")
     chat_q2_pass = False
 
 # [4] Load Analysis Preset (Palisades) and test Analysis-Aware Query
@@ -66,7 +66,7 @@ req = urllib.request.Request(
     data=preset_payload,
     headers={"Content-Type": "application/x-www-form-urlencoded", "User-Agent": "Mozilla/5.0"}
 )
-with urllib.request.urlopen(req) as resp:
+with urllib.request.urlopen(req, timeout=30) as resp:
     preset_data = json.loads(resp.read().decode())
     print("  Preset Analyzed:", preset_data.get("incident_name"))
     print("  Burned Area:", preset_data.get("burned_area_km2"), "km²")
@@ -81,14 +81,14 @@ req = urllib.request.Request(
     headers={"Content-Type": "application/x-www-form-urlencoded", "User-Agent": "Mozilla/5.0"}
 )
 try:
-    with urllib.request.urlopen(req) as resp:
+    with urllib.request.urlopen(req, timeout=30) as resp:
         res = json.loads(resp.read().decode())
         print("  Status Code:", resp.status)
         print("  Context Included:", res.get("context_included"))
         print("  Gemini Reply:\n  " + res.get("reply", ""))
         chat_q3_pass = True
-except urllib.error.HTTPError as e:
-    print(f"  Error {e.code}: {e.read().decode()}")
+except Exception as e:
+    print(f"  Error: {e}")
     chat_q3_pass = False
 
 # [6] Test Ground Truth Query: "What is the IoU?"
@@ -100,13 +100,13 @@ req = urllib.request.Request(
     headers={"Content-Type": "application/x-www-form-urlencoded", "User-Agent": "Mozilla/5.0"}
 )
 try:
-    with urllib.request.urlopen(req) as resp:
+    with urllib.request.urlopen(req, timeout=30) as resp:
         res = json.loads(resp.read().decode())
         print("  Status Code:", resp.status)
         print("  Gemini Reply:\n  " + res.get("reply", ""))
         chat_q4_pass = True
-except urllib.error.HTTPError as e:
-    print(f"  Error {e.code}: {e.read().decode()}")
+except Exception as e:
+    print(f"  Error: {e}")
     chat_q4_pass = False
 
 # [7] Security Test: Inspect Client-Side Assets for Secret Leakage

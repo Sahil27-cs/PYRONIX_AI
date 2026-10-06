@@ -133,7 +133,7 @@ def call_gemini_api(prompt_text: str, system_instruction: str) -> str:
         ],
         "generationConfig": {
             "temperature": 0.2,
-            "maxOutputTokens": 1024
+            "maxOutputTokens": 400
         }
     }
 
@@ -144,7 +144,7 @@ def call_gemini_api(prompt_text: str, system_instruction: str) -> str:
         # 1. Official REST API with direct HTTP (Fastest and zero hanging in serverless)
         url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_clean}:generateContent?key={key}"
         try:
-            r = requests.post(url, headers=headers, json=payload, timeout=6)
+            r = requests.post(url, headers=headers, json=payload, timeout=16)
             if r.status_code == 200:
                 out = r.json()
                 candidates = out.get("candidates", [])
@@ -164,7 +164,7 @@ def call_gemini_api(prompt_text: str, system_instruction: str) -> str:
                 errors_map[f"{model_clean}_rest"] = f"HTTP {r.status_code}: {r.text[:80]}"
                 continue
         except requests.exceptions.Timeout:
-            errors_map[f"{model_clean}_rest"] = "Timeout (6s)"
+            errors_map[f"{model_clean}_rest"] = "Timeout (16s)"
             continue
         except requests.exceptions.RequestException as re:
             errors_map[f"{model_clean}_rest"] = f"ReqErr: {str(re)[:80]}"
