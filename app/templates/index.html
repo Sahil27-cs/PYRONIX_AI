@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pyronix AI — Multi-Agent Satellite Wildfire Intelligence</title>
+    <meta name="description" content="Autonomous deep learning system for satellite wildfire delineation, all-weather SAR penetration, damage assessment, and tactical emergency response.">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Core Application Stylesheet -->
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body class="dark-theme">
+    <!-- Background Ambient Glow Effects -->
+    <div class="ambient-glow glow-top-left"></div>
+    <div class="ambient-glow glow-bottom-right"></div>
+    <div class="ambient-grid"></div>
+
+    <!-- Application Shell -->
+    <div class="app-container">
+        
+        <!-- Header & Telemetry Bar -->
+        <header class="app-header">
+            <div class="header-branding">
+                <div class="logo-mark">
+                    <svg viewBox="0 0 32 32" fill="none" class="flame-icon">
+                        <path d="M16 2C16 2 20 8 20 13C20 15.2 19.1 17.2 17.6 18.6C16.8 17.3 16 15.5 16 13C16 11 15 9.5 13.5 8C12 11 10 14 10 18C10 21.3 12.7 24 16 24C19.3 24 22 21.3 22 18C22 16.5 21.4 15.1 20.5 14" stroke="url(#flame-grad)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        <circle cx="16" cy="18" r="3" fill="#ff7849"/>
+                        <defs>
+                            <linearGradient id="flame-grad" x1="10" y1="2" x2="22" y2="24" gradientUnits="userSpaceOnUse">
+                                <stop stop-color="#ff7849"/>
+                                <stop offset="0.5" stop-color="#ff3d00"/>
+                                <stop offset="1" stop-color="#ff9100"/>
+                            </linearGradient>
+                        </defs>
+                    </svg>
+                    <span class="radar-ping"></span>
+                </div>
+                <div class="branding-text">
+                    <h1 class="system-title">PYRONIX <span class="accent-text">AI</span></h1>
+                    <span class="system-subtitle">AI-POWERED SATELLITE WILDFIRE & BURNED-AREA INTELLIGENCE PLATFORM</span>
+                </div>
+            </div>
+
+            <!-- Real-Time Hardware & Model Status Chips -->
+            <div class="telemetry-bar">
+                <div class="telemetry-chip status-active" id="chip-status">
+                    <span class="indicator-dot"></span>
+                    <span class="chip-label">SYSTEM:</span>
+                    <span class="chip-value" id="val-status">INITIALIZING</span>
+                </div>
+                <div class="telemetry-chip" id="chip-hardware">
+                    <svg class="chip-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><path d="M9 1v3M15 1v3M9 20v3M15 20v3M20 9h3M20 15h3M1 9h3M1 15h3"/></svg>
+                    <span class="chip-label">ACCELERATOR:</span>
+                    <span class="chip-value" id="val-device">CUDA</span>
+                </div>
+                <div class="telemetry-chip" id="chip-models">
+                    <svg class="chip-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+                    <span class="chip-label">ACTIVE MODELS:</span>
+                    <span class="chip-value" id="val-models">5 ResNet-34</span>
+                </div>
+                <div class="telemetry-chip" id="chip-incident">
+                    <svg class="chip-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    <span class="chip-label">TARGET:</span>
+                    <span class="chip-value highlight" id="val-incident">Standby</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Workspace Grid -->
+        <main class="main-layout">
+            
+            <!-- Left Column: Controls, Upload & Mission Presets -->
+            <aside class="control-panel">
+                
+                <!-- Section 1: Incident Presets -->
+                <div class="panel-card" id="card-presets">
+                    <div class="card-header">
+                        <div class="header-title-group">
+                            <span class="section-tag">SCENARIOS</span>
+                            <h2 class="card-title">Mission Target Presets</h2>
+                        </div>
+                        <span class="badge badge-pulse">1-Click Dispatch</span>
+                    </div>
+                    <p class="card-desc">Select an operational wildfire scene with calibrated multi-sensor optical and radar data:</p>
+                    
+                    <div class="preset-list" id="preset-list">
+                        <!-- Loaded dynamically or default items -->
+                        <div class="preset-card active" data-preset-id="palisades" id="preset-btn-palisades">
+                            <div class="preset-badge-row">
+                                <span class="tag tag-usa">USA • CAL FIRE</span>
+                                <span class="tag tag-dual">Optical + SAR</span>
+                            </div>
+                            <h3 class="preset-name">Pacific Palisades Wildfire</h3>
+                            <p class="preset-meta">Topanga Canyon & Pacific Palisades WUI, California • 235.9 km² swath</p>
+                            <div class="preset-footer">
+                                <span class="sensor-pill">Sentinel-2 MSI</span>
+                                <span class="sensor-pill">Sentinel-1A SAR</span>
+                                <button class="btn-preset-run" id="btn-run-palisades">Deploy Analysis &rarr;</button>
+                            </div>
+                        </div>
+
+                        <div class="preset-card" data-preset-id="copernicus_encinedo" id="preset-btn-copernicus">
+                            <div class="preset-badge-row">
+                                <span class="tag tag-eu">SPAIN • EMS EMSR227</span>
+                                <span class="tag tag-fusion">Multi-Spectral</span>
+                            </div>
+                            <h3 class="preset-name">Copernicus EMS Encinedo</h3>
+                            <p class="preset-meta">Castile and León pine forest wildfire • Ground truth damage vector</p>
+                            <div class="preset-footer">
+                                <span class="sensor-pill">Sentinel-2 6-Band</span>
+                                <span class="sensor-pill">Sentinel-1 Dual-Pol</span>
+                                <button class="btn-preset-run" id="btn-run-copernicus">Deploy Analysis &rarr;</button>
+                            </div>
+                        </div>
+
+                        <div class="preset-card" data-preset-id="smoke_occluded" id="preset-btn-smoke">
+                            <div class="preset-badge-row">
+                                <span class="tag tag-radar">ALL-WEATHER TEST</span>
+                                <span class="tag tag-occluded">95% Smoke Occlusion</span>
+                            </div>
+                            <h3 class="preset-name">Heavy Smoke & Cloud Occlusion</h3>
+                            <p class="preset-meta">Demonstrates autonomous optical sensor arbitration bypass to C-band SAR</p>
+                            <div class="preset-footer">
+                                <span class="sensor-pill alert-pill">Optical Blinded</span>
+                                <span class="sensor-pill success-pill">SAR Penetration</span>
+                                <button class="btn-preset-run" id="btn-run-smoke">Deploy Analysis &rarr;</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 2: Custom Multi-Sensor Satellite Upload -->
+                <div class="panel-card" id="card-upload">
+                    <div class="card-header">
+                        <div class="header-title-group">
+                            <span class="section-tag">MULTI-MODAL INGEST</span>
+                            <h2 class="card-title">Upload Satellite Imagery</h2>
+                        </div>
+                        <span class="badge">GeoTIFF / NPZ / RGB</span>
+                    </div>
+
+                    <form id="upload-form" class="upload-form">
+                        <div class="form-group">
+                            <label for="input-incident-name" class="input-label">Incident Name / Operations Code</label>
+                            <input type="text" id="input-incident-name" class="text-input" placeholder="e.g. Sierra Madre Zone B Ingress" value="Custom Operational Sortie">
+                        </div>
+
+                        <div class="dual-dropzone-grid">
+                            <!-- Optical Dropzone -->
+                            <div class="dropzone" id="dropzone-optical">
+                                <input type="file" id="file-optical" class="file-input" accept=".npz,.npy,.tif,.tiff,.png,.jpg,.jpeg">
+                                <div class="dropzone-content">
+                                    <div class="dropzone-icon optical-icon">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+                                    </div>
+                                    <span class="drop-title">Optical Imagery</span>
+                                    <span class="drop-sub">Sentinel-2 RGB / NPZ</span>
+                                    <span class="file-name-display" id="name-optical">No file selected</span>
+                                </div>
+                            </div>
+
+                            <!-- SAR Dropzone -->
+                            <div class="dropzone" id="dropzone-sar">
+                                <input type="file" id="file-sar" class="file-input" accept=".npz,.npy,.tif,.tiff,.png,.jpg,.jpeg">
+                                <div class="dropzone-content">
+                                    <div class="dropzone-icon sar-icon">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12a10 10 0 1 0 20 0 10 10 0 1 0-20 0Z"/><path d="M12 2a10 10 0 0 1 10 10"/><path d="M12 6a6 6 0 0 1 6 6"/><path d="M12 10a2 2 0 0 1 2 2"/></svg>
+                                    </div>
+                                    <span class="drop-title">SAR Radar Imagery</span>
+                                    <span class="drop-sub">Sentinel-1 Dual-Pol (VV+VH)</span>
+                                    <span class="file-name-display" id="name-sar">No file selected</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Threshold Parameter -->
+                        <div class="slider-control">
+                            <div class="slider-label-row">
+                                <span class="slider-label">Delineation Confidence Threshold:</span>
+                                <span class="slider-val-badge" id="val-threshold">0.50</span>
+                            </div>
+                            <input type="range" id="input-threshold" class="slider-range" min="0.10" max="0.90" step="0.05" value="0.50">
+                            <div class="slider-ticks">
+                                <span>0.1 (High Recall)</span>
+                                <span>0.5 (Balanced F1)</span>
+                                <span>0.9 (High Precision)</span>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn-action-primary" id="btn-submit-upload">
+                            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                            Execute Multi-Agent Analysis
+                        </button>
+                    </form>
+                </div>
+            </aside>
+
+            <!-- Center Column: Visualization Canvas & Situation HUD -->
+            <section class="viewport-panel">
+                
+                <!-- Tactical Situation Quick-HUD -->
+                <div class="situation-hud" id="situation-hud">
+                    <div class="hud-item threat-item">
+                        <span class="hud-label">OVERALL THREAT</span>
+                        <div class="hud-value-row">
+                            <span class="threat-badge threat-critical" id="hud-threat-badge">STANDBY</span>
+                            <span class="threat-score" id="hud-threat-score">--/100</span>
+                        </div>
+                    </div>
+
+                    <div class="hud-item">
+                        <span class="hud-label">BURNED AREA</span>
+                        <div class="hud-value-row">
+                            <span class="hud-metric" id="hud-burned-km2">--.--</span>
+                            <span class="hud-unit">km²</span>
+                        </div>
+                        <span class="hud-submetric" id="hud-burned-acres">(-- acres)</span>
+                    </div>
+
+                    <div class="hud-item">
+                        <span class="hud-label">PERIMETER LENGTH</span>
+                        <div class="hud-value-row">
+                            <span class="hud-metric" id="hud-perimeter-km">--.--</span>
+                            <span class="hud-unit">km</span>
+                        </div>
+                        <span class="hud-submetric" id="hud-clusters">-- clusters</span>
+                    </div>
+
+                    <div class="hud-item">
+                        <span class="hud-label">SENSOR ROUTING</span>
+                        <div class="hud-value-row">
+                            <span class="hud-model-chip" id="hud-model-used">Auto-Arbitrate</span>
+                        </div>
+                        <span class="hud-submetric" id="hud-arbitration-mode">Standby</span>
+                    </div>
+
+                    <div class="hud-item">
+                        <span class="hud-label">DEBRIS FLOW RISK</span>
+                        <div class="hud-value-row">
+                            <span class="hazard-chip hazard-high" id="hud-debris-hazard">STANDBY</span>
+                        </div>
+                        <span class="hud-submetric" id="hud-hydro-risk">Hydrophobicity: --</span>
+                    </div>
+
+                    <div class="hud-item" id="hud-ground-truth-item">
+                        <span class="hud-label">GROUND TRUTH</span>
+                        <div class="hud-value-row">
+                            <span class="hazard-chip hazard-low" id="hud-gt-badge">AVAILABLE</span>
+                        </div>
+                        <span class="hud-submetric" id="hud-gt-desc">USGS dNBR Reference</span>
+                    </div>
+                </div>
+
+                <!-- Main Satellite Viewer -->
+                <div class="viewer-card">
+                    <!-- Layer Selection Bar -->
+                    <div class="viewer-toolbar">
+                        <div class="layer-tabs" id="layer-tabs">
+                            <button class="layer-tab active" data-layer="probability_map" id="tab-prob">
+                                <span class="tab-dot dot-fire"></span> AI Burn Probability
+                            </button>
+                            <button class="layer-tab" data-layer="binary_mask" id="tab-mask">
+                                <span class="tab-dot dot-mask"></span> Delineation Mask
+                            </button>
+                            <button class="layer-tab" data-layer="severity_map" id="tab-severity">
+                                <span class="tab-dot dot-grade"></span> Copernicus Damage (EMS)
+                            </button>
+                            <button class="layer-tab" data-layer="uncertainty_map" id="tab-uncertainty">
+                                <span class="tab-dot dot-unc"></span> Uncertainty Heatmap
+                            </button>
+                            <button class="layer-tab" data-layer="optical_rgb" id="tab-optical">
+                                <span class="tab-dot dot-rgb"></span> Sentinel-2 Optical
+                            </button>
+                            <button class="layer-tab" data-layer="sar_vh" id="tab-sar">
+                                <span class="tab-dot dot-sar"></span> Sentinel-1 SAR Radar
+                            </button>
+                            <button class="layer-tab" data-layer="dnbr" id="tab-dnbr">
+                                <span class="tab-dot dot-dnbr"></span> USGS dNBR Truth
+                            </button>
+                        </div>
+
+                        <!-- Viewer Utility Tools -->
+                        <div class="viewer-tools">
+                            <div class="opacity-control" title="Adjust Layer Blend Opacity">
+                                <span class="opacity-label">Blend:</span>
+                                <input type="range" id="layer-opacity" class="opacity-slider" min="0.1" max="1.0" step="0.05" value="1.0">
+                            </div>
+                            <button class="btn-tool" id="btn-toggle-split" title="Toggle Split-Screen Comparison View">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="3" x2="12" y2="21"/><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
+                                Compare
+                            </button>
+                            <button class="btn-tool" id="btn-fullscreen" title="Expand Fullscreen Canvas">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Canvas Viewport -->
+                    <div class="canvas-stage" id="canvas-stage">
+                        <!-- Loading Scanning Overlay -->
+                        <div class="stage-overlay loading-overlay" id="loading-overlay" style="display: none;">
+                            <div class="radar-sweep-anim"></div>
+                            <div class="loading-content">
+                                <div class="pulse-ring"></div>
+                                <span class="loading-title">EXECUTING AUTONOMOUS MULTI-AGENT INFERENCE</span>
+                                <span class="loading-step" id="loading-step-text">SensorArbitrator inspecting optical cloud occlusion...</span>
+                            </div>
+                        </div>
+
+                        <!-- Main Primary Satellite Display -->
+                        <div class="image-wrapper" id="image-wrapper">
+                            <img id="primary-view-img" src="" alt="Wildfire Satellite Analysis" class="stage-img">
+                            
+                            <!-- Split Comparison Secondary Layer -->
+                            <div class="split-reveal-container" id="split-container" style="display: none;">
+                                <img id="secondary-view-img" src="" alt="Comparison Satellite Layer" class="stage-img-split">
+                                <div class="split-divider" id="split-divider">
+                                    <div class="split-handle"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Canvas Watermark / Compass Badge -->
+                        <div class="canvas-hud-overlay">
+                            <div class="compass-badge">
+                                <span class="compass-n">N &uarr;</span>
+                                <span class="coords-stamp" id="coords-stamp">Sentinel-2 / Sentinel-1 Constellation</span>
+                            </div>
+                            <div class="legend-badge" id="active-legend">
+                                <span class="legend-title" id="legend-title">Burn Probability (ResNet-34)</span>
+                                <div class="legend-bar-container">
+                                    <span class="legend-min" id="legend-min">0.0</span>
+                                    <div class="legend-gradient-bar" id="legend-bar"></div>
+                                    <span class="legend-max" id="legend-max">1.0</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Multi-Agent Autonomous Execution Telemetry Timeline -->
+                <div class="agent-telemetry-card">
+                    <div class="card-header">
+                        <div class="header-title-group">
+                            <span class="section-tag">MULTI-AGENT COLLABORATION</span>
+                            <h2 class="card-title">Agent Telemetry & Decision Graph</h2>
+                        </div>
+                        <span class="badge" id="telemetry-cycle-badge">Cycle ID: 000</span>
+                    </div>
+
+                    <div class="agent-nodes-grid">
+                        <!-- Agent 1: SensorArbitrator -->
+                        <div class="agent-node" id="node-arbitrator">
+                            <div class="node-header">
+                                <div class="node-icon icon-arbitrator">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                                </div>
+                                <div class="node-info">
+                                    <span class="node-name">SensorArbitrator</span>
+                                    <span class="node-role">Telemetry Routing</span>
+                                </div>
+                                <span class="node-status-dot status-ready"></span>
+                            </div>
+                            <div class="node-body">
+                                <div class="metric-row">
+                                    <span class="k">Cloud Cover:</span>
+                                    <span class="v" id="arb-cloud">0.0%</span>
+                                </div>
+                                <div class="metric-row">
+                                    <span class="k">SAR Quality:</span>
+                                    <span class="v" id="arb-sar">1.00</span>
+                                </div>
+                                <div class="metric-row">
+                                    <span class="k">Routing:</span>
+                                    <span class="v highlight" id="arb-model">S2_RGB_only</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Agent 2: Delineation -->
+                        <div class="agent-node" id="node-delineation">
+                            <div class="node-header">
+                                <div class="node-icon icon-delineation">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+                                </div>
+                                <div class="node-info">
+                                    <span class="node-name">DelineationAgent</span>
+                                    <span class="node-role">Deep U-Net Segmenter</span>
+                                </div>
+                                <span class="node-status-dot status-ready"></span>
+                            </div>
+                            <div class="node-body">
+                                <div class="metric-row">
+                                    <span class="k">Burn Extent:</span>
+                                    <span class="v" id="del-extent">-- km²</span>
+                                </div>
+                                <div class="metric-row">
+                                    <span class="k">Coverage %:</span>
+                                    <span class="v" id="del-coverage">--%</span>
+                                </div>
+                                <div class="metric-row">
+                                    <span class="k">Uncertainty:</span>
+                                    <span class="v" id="del-uncertainty">--</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Agent 3: Severity -->
+                        <div class="agent-node" id="node-severity">
+                            <div class="node-header">
+                                <div class="node-icon icon-severity">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                                </div>
+                                <div class="node-info">
+                                    <span class="node-name">SeverityQuantifier</span>
+                                    <span class="node-role">Copernicus Stratifier</span>
+                                </div>
+                                <span class="node-status-dot status-ready"></span>
+                            </div>
+                            <div class="node-body">
+                                <div class="metric-row">
+                                    <span class="k">Grade 1 (Low):</span>
+                                    <span class="v" id="sev-g1">--%</span>
+                                </div>
+                                <div class="metric-row">
+                                    <span class="k">Grade 2 (Mod):</span>
+                                    <span class="v" id="sev-g2">--%</span>
+                                </div>
+                                <div class="metric-row">
+                                    <span class="k">Grade 3 (High):</span>
+                                    <span class="v alert-text" id="sev-g3">--%</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Agent 4: Risk -->
+                        <div class="agent-node" id="node-risk">
+                            <div class="node-header">
+                                <div class="node-icon icon-risk">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                                </div>
+                                <div class="node-info">
+                                    <span class="node-name">RiskAssessment</span>
+                                    <span class="node-role">Hazard & BAER Planner</span>
+                                </div>
+                                <span class="node-status-dot status-ready"></span>
+                            </div>
+                            <div class="node-body">
+                                <div class="metric-row">
+                                    <span class="k">Debris Hazard:</span>
+                                    <span class="v highlight" id="risk-debris">STANDBY</span>
+                                </div>
+                                <div class="metric-row">
+                                    <span class="k">Containment:</span>
+                                    <span class="v" id="risk-contain">--</span>
+                                </div>
+                                <div class="metric-row">
+                                    <span class="k">Threat Score:</span>
+                                    <span class="v" id="risk-score">--/100</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Agent 5: Orchestrator -->
+                        <div class="agent-node" id="node-orchestrator">
+                            <div class="node-header">
+                                <div class="node-icon icon-orchestrator">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m10 15 5-3-5-3v6Z"/></svg>
+                                </div>
+                                <div class="node-info">
+                                    <span class="node-name">WildfireOrchestrator</span>
+                                    <span class="node-role">Executive SitRep</span>
+                                </div>
+                                <span class="node-status-dot status-ready"></span>
+                            </div>
+                            <div class="node-body">
+                                <div class="metric-row">
+                                    <span class="k">Report State:</span>
+                                    <span class="v highlight" id="orch-state">Ready</span>
+                                </div>
+                                <div class="metric-row">
+                                    <span class="k">Dispatched:</span>
+                                    <span class="v" id="orch-time">--</span>
+                                </div>
+                                <div class="metric-row">
+                                    <span class="k">SitRep Log:</span>
+                                    <button class="btn-micro" id="btn-view-sitrep-modal">Open SitRep</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Right Column: Pyronix AI Tactical Chatbot & SitRep -->
+            <aside class="intel-panel">
+                
+                <!-- Tactical Officer Chat Assistant -->
+                <div class="panel-card chat-card">
+                    <div class="card-header">
+                        <div class="header-title-group">
+                            <span class="section-tag">AI INCIDENT ADVISOR</span>
+                            <h2 class="card-title">Pyronix Tactical Officer</h2>
+                        </div>
+                        <span class="status-online"><span class="pulse-dot"></span> LIVE</span>
+                    </div>
+
+                    <!-- Chat conversation container -->
+                    <div class="chat-thread" id="chat-thread">
+                        <div class="chat-message msg-system">
+                            <div class="msg-avatar bot-avatar">AI</div>
+                            <div class="msg-bubble">
+                                <p class="bot-greeting"><strong>Pyronix Tactical Officer online.</strong></p>
+                                <p>Autonomous satellite sensor arbitration and deep segmentation models are loaded. Select a wildfire target preset or upload imagery to initiate real-time tactical intelligence.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Suggested Prompts Chips -->
+                    <div class="prompt-chips" id="prompt-chips">
+                        <button class="chip-btn" data-query="What is the total burned area and scene coverage?">Burned Acreage</button>
+                        <button class="chip-btn" data-query="Explain the debris flow and mudslide hazard.">Debris Flow</button>
+                        <button class="chip-btn" data-query="Why was this sensor arbitration mode selected?">Sensor Choice</button>
+                        <button class="chip-btn" data-query="What are the emergency BAER and tactical recommendations?">Prescriptions</button>
+                        <button class="chip-btn" data-query="Give me a Copernicus EMS damage grade breakdown.">Severity Tiers</button>
+                    </div>
+
+                    <!-- Input Form -->
+                    <form id="chat-form" class="chat-input-bar">
+                        <input type="text" id="chat-input" class="chat-text-input" placeholder="Ask tactical questions about the wildfire..." autocomplete="off">
+                        <button type="submit" class="btn-chat-send" id="btn-send-chat" aria-label="Send Query">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Tactical Actions & Export Card -->
+                <div class="panel-card" id="card-exports">
+                    <div class="card-header">
+                        <div class="header-title-group">
+                            <span class="section-tag">OPERATIONAL EXPORTS</span>
+                            <h2 class="card-title">SitRep & GIS Products</h2>
+                        </div>
+                    </div>
+
+                    <div class="export-actions-list">
+                        <button class="btn-export" id="btn-download-sitrep">
+                            <svg class="export-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                            <div class="export-text">
+                                <span class="export-title">Download Situation Report</span>
+                                <span class="export-desc">Full Markdown SitRep with BAER prescriptions</span>
+                            </div>
+                        </button>
+
+                        <button class="btn-export" id="btn-copy-sitrep">
+                            <svg class="export-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                            <div class="export-text">
+                                <span class="export-title">Copy Incident Briefing</span>
+                                <span class="export-desc">Formatted clipboard summary for incident commander</span>
+                            </div>
+                        </button>
+                    </div>
+                </div>
+            </aside>
+        </main>
+    </div>
+
+    <!-- Modal: Complete Markdown SitRep Viewer -->
+    <div class="modal-overlay" id="sitrep-modal" style="display: none;">
+        <div class="modal-card">
+            <div class="modal-header">
+                <div class="modal-title-group">
+                    <span class="section-tag">TACTICAL PRODUCT</span>
+                    <h2 class="modal-title" id="modal-title">Executive Wildfire Situation Report</h2>
+                </div>
+                <button class="btn-modal-close" id="btn-close-modal">&times;</button>
+            </div>
+            <div class="modal-body" id="modal-sitrep-body">
+                <pre class="markdown-preview" id="sitrep-markdown-content">Loading Situation Report...</pre>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-action-secondary" id="btn-modal-copy">Copy to Clipboard</button>
+                <button class="btn-action-primary" id="btn-modal-download">Download Markdown File</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification Container -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <!-- Core Application Controller -->
+    <script src="/static/js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,62 @@
+{
+  "dataset_split": {
+    "test_fold": "cyan",
+    "val_fold": "purple",
+    "train_folds": [
+      "coral",
+      "grey",
+      "lime",
+      "magenta",
+      "pink"
+    ],
+    "train_events": 43,
+    "val_events": 8,
+    "test_events": 11,
+    "train_patches": 2281,
+    "val_patches": 2161,
+    "test_patches": 603
+  },
+  "model_configuration": {
+    "model": "ResNet34UNet",
+    "input_channels": [
+      "B2",
+      "B3",
+      "B4",
+      "B8",
+      "B11",
+      "B12"
+    ],
+    "patch_size": 256,
+    "stride": 128,
+    "batch_size": 16,
+    "optimizer": "AdamW",
+    "learning_rate": 0.0001,
+    "weight_decay": 0.0001,
+    "loss_function": "0.5*Focal + 0.5*Dice"
+  },
+  "training_summary": {
+    "best_epoch": 15,
+    "total_epochs_trained": 22,
+    "best_val_dice": 0.8904595868090461,
+    "training_time_minutes": 35.72945808172226,
+    "peak_vram_gb": 1.2598876953125
+  },
+  "test_metrics": {
+    "iou": 0.7249226823150445,
+    "dice": 0.840527740457462,
+    "precision": 0.8551629000705889,
+    "recall": 0.8263850811310663,
+    "f1": 0.840527740457462,
+    "accuracy": 0.9480469610362876,
+    "tp": 5410596,
+    "fp": 916381,
+    "tn": 32054521,
+    "fn": 1136710,
+    "total_pixels": 39518208,
+    "gt_burned_percentage": 16.567821091482653,
+    "pred_burned_percentage": 16.01028315858853,
+    "loss": 0.36272940014922994,
+    "focal_loss": 0.07514338591637995,
+    "dice_loss": 0.650315407299086
+  }
+}

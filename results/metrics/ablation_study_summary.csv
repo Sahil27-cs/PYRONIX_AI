@@ -1,0 +1,9 @@
+Model Variant,Description,Channels,Test IoU (%),Test Dice (%),Precision (%),Recall (%),Accuracy (%),Pred Area (km2),GT Area (km2),Area Bias (%),Area R2
+S1_VV_only,SAR Single-Pol (VV only),1,15.04,26.14,22.51,31.17,62.6,812.7,590.1,37.72,0.7112
+S1_VH_only,SAR Cross-Pol (VH only),1,14.26,24.96,22.03,28.77,63.25,768.9,590.1,30.3,0.535
+S1_VV_VH,SAR Dual-Pol without ratio (VV+VH),2,20.47,33.98,27.55,44.33,63.43,948.2,590.1,60.69,0.6598
+S1_Full,"SAR Full 3-channel Baseline (VV, VH, VV/VH ratio)",3,20.3,33.75,34.44,33.09,72.41,564.0,590.1,-4.43,0.3489
+S2_RGB_only,"Optical Visible Only (B2,B3,B4)",3,58.05,73.45,71.95,75.02,88.48,614.9,590.1,4.2,0.6245
+S2_NIR_SWIR,"Optical Infrared Only (B8,B11,B12)",3,68.38,81.22,79.23,83.32,91.82,620.4,590.1,5.13,0.8936
+S2_Full,Optical Full 6-channel Baseline (RGB + NIR + SWIR1 + SWIR2),6,70.55,82.73,84.18,81.33,92.79,570.0,590.1,-3.4,0.8659
+Multimodal_Fusion,Multimodal Early Concatenation (S2 6-ch + S1 3-ch = 9-ch),9,69.99,82.35,83.96,80.8,92.64,567.8,590.1,-3.78,0.8211

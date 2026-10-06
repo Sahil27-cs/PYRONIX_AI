@@ -1,0 +1,134 @@
+{
+  "timestamp": "2026-10-06 16:43:47",
+  "platform": {
+    "device": "cuda",
+    "device_name": "NVIDIA GeForce RTX 4050 Laptop GPU",
+    "torch_version": "2.6.0+cu124",
+    "cuda_available": true
+  },
+  "tests": {
+    "checkpoints_integrity": {
+      "passed": true,
+      "models": {
+        "S2_Baseline": {
+          "status": "VALID",
+          "file": "best_s2_baseline_model.pt",
+          "size_mb": 280.04,
+          "in_channels": 6,
+          "parameters": 24445649,
+          "forward_pass": "PASSED"
+        },
+        "S1_Baseline": {
+          "status": "VALID",
+          "file": "best_s1_baseline_model.pt",
+          "size_mb": 279.94,
+          "in_channels": 3,
+          "parameters": 24436241,
+          "forward_pass": "PASSED"
+        },
+        "Multimodal_Fusion": {
+          "status": "VALID",
+          "file": "best_fusion_model.pt",
+          "size_mb": 280.15,
+          "in_channels": 9,
+          "parameters": 24455057,
+          "forward_pass": "PASSED"
+        },
+        "Ablation_S1_VV": {
+          "status": "VALID",
+          "file": "ablation_S1_VV_only.pt",
+          "size_mb": 93.35,
+          "in_channels": 1,
+          "parameters": 24429969,
+          "forward_pass": "PASSED"
+        },
+        "Ablation_S1_VH": {
+          "status": "VALID",
+          "file": "ablation_S1_VH_only.pt",
+          "size_mb": 93.35,
+          "in_channels": 1,
+          "parameters": 24429969,
+          "forward_pass": "PASSED"
+        },
+        "Ablation_S1_VV_VH": {
+          "status": "VALID",
+          "file": "ablation_S1_VV_VH.pt",
+          "size_mb": 93.37,
+          "in_channels": 2,
+          "parameters": 24433105,
+          "forward_pass": "PASSED"
+        },
+        "Ablation_S2_RGB": {
+          "status": "VALID",
+          "file": "ablation_S2_RGB_only.pt",
+          "size_mb": 93.38,
+          "in_channels": 3,
+          "parameters": 24436241,
+          "forward_pass": "PASSED"
+        },
+        "Ablation_S2_NIR_SWIR": {
+          "status": "VALID",
+          "file": "ablation_S2_NIR_SWIR.pt",
+          "size_mb": 93.38,
+          "in_channels": 3,
+          "parameters": 24436241,
+          "forward_pass": "PASSED"
+        }
+      }
+    },
+    "metrics_audit": {
+      "passed": true,
+      "files": {
+        "s2_baseline_metrics.json": "VERIFIED",
+        "s1_baseline_metrics.json": "VERIFIED",
+        "s2_vs_s1_comparison.json": "VERIFIED",
+        "fusion_metrics.json": "VERIFIED",
+        "ablation_study.json": "VERIFIED",
+        "palisades_generalization.json": "VERIFIED"
+      }
+    },
+    "multiagent_subsystem": {
+      "passed": true,
+      "sitrep_keys": [
+        "incident_name",
+        "timestamp",
+        "processing_time_sec",
+        "threat_level",
+        "burned_area_km2",
+        "burned_area_acres",
+        "perimeter_km",
+        "arbitration",
+        "delineation",
+        "severity",
+        "risk",
+        "markdown_report"
+      ]
+    },
+    "web_app_endpoints": {
+      "passed": true,
+      "endpoints": {
+        "GET /api/status": "200 OK (Device: NVIDIA GeForce RTX 4050 Laptop GPU)",
+        "GET /api/presets": "200 OK (3 presets)",
+        "POST /api/chat": "200 OK (Tactical Assistant Functional)",
+        "GET /api/sitrep/markdown": "200 OK (2,999 bytes)"
+      }
+    },
+    "data_pipeline": {
+      "passed": true
+    },
+    "visual_artifacts": {
+      "passed": true,
+      "total_artifacts": 19
+    }
+  },
+  "summary": {
+    "overall_status": "PASSED",
+    "all_tests_passed": true,
+    "total_tests": 6,
+    "tests_passed": 6
+  },
+  "benchmark_table": {
+    "Zenodo_Test_Set": {},
+    "Palisades_Generalization_Benchmark": {}
+  }
+}

@@ -1,0 +1,1235 @@
+{
+  "stage": "STAGE 6: MULTIMODAL FUSION EVALUATION & RIGOROUS ABLATION STUDY",
+  "timestamp": "2026-10-06 13:39:37",
+  "models_evaluated": {
+    "S1_VV_only": {
+      "description": "SAR Single-Pol (VV only)",
+      "in_channels": 1,
+      "channel_indices": [
+        6
+      ],
+      "metrics": {
+        "iou": 0.15035346561113974,
+        "dice": 0.2614039425373706,
+        "precision": 0.22510587567135917,
+        "recall": 0.3116585259960541,
+        "f1": 0.2614039425373706,
+        "accuracy": 0.6259877546778242,
+        "tp": 1839106,
+        "fp": 6330854,
+        "tn": 15555381,
+        "fn": 4061923,
+        "total_pixels": 27787264,
+        "gt_burned_percentage": 21.236452066673344,
+        "pred_burned_percentage": 29.401815162514634
+      },
+      "burned_area": {
+        "total_gt_km2": 590.1029,
+        "total_pred_km2": 812.6797000000001,
+        "total_bias_km2": 222.57680000000016,
+        "total_bias_pct": 37.71830302816681,
+        "mae_event_km2": 27.498759999999997,
+        "mape_event_pct": 59.16685985083927,
+        "pearson_r": 0.8433131915066302,
+        "r2_score": 0.7111771389690983,
+        "event_breakdown": [
+          {
+            "event": "EMSR227_01ENCINEDO_02GRADING_MAP_v2_vector",
+            "gt_km2": 103.0314,
+            "pred_km2": 107.7397,
+            "error_km2": 4.708299999999994,
+            "abs_error_km2": 4.708299999999994,
+            "pct_error": 4.569771490072778
+          },
+          {
+            "event": "EMSR227_02CORPORALES_02GRADING_MAP_v2_vector",
+            "gt_km2": 57.813100000000006,
+            "pred_km2": 45.8432,
+            "error_km2": -11.969900000000003,
+            "abs_error_km2": 11.969900000000003,
+            "pct_error": 20.70447343171817
+          },
+          {
+            "event": "EMSR227_03SANTAEULALIADECABRERA_02GRADING_MAP_v2_vector",
+            "gt_km2": 120.4171,
+            "pred_km2": 144.1439,
+            "error_km2": 23.726799999999997,
+            "abs_error_km2": 23.726799999999997,
+            "pct_error": 19.703844412143752
+          },
+          {
+            "event": "EMSR227_04TRUCHILLAS_02GRADING_MAP_v2_vector",
+            "gt_km2": 61.107800000000005,
+            "pred_km2": 111.6658,
+            "error_km2": 50.558,
+            "abs_error_km2": 50.558,
+            "pct_error": 82.73574196162487
+          },
+          {
+            "event": "EMSR248_01PINODELORO_02GRADING_MAP_v1_vector",
+            "gt_km2": 115.976,
+            "pred_km2": 164.305,
+            "error_km2": 48.32900000000001,
+            "abs_error_km2": 48.32900000000001,
+            "pct_error": 41.671549141930306
+          },
+          {
+            "event": "EMSR248_04HOYOSDEMIGUELMUNOZ_02GRADING_MAP_v1_vector",
+            "gt_km2": 28.0762,
+            "pred_km2": 24.0511,
+            "error_km2": -4.025099999999998,
+            "abs_error_km2": 4.025099999999998,
+            "pct_error": 14.336336706414428
+          },
+          {
+            "event": "EMSR254_01PORTELADEAGUIAR_02GRADING_MAP_v2_vector",
+            "gt_km2": 18.3644,
+            "pred_km2": 22.169500000000003,
+            "error_km2": 3.805100000000003,
+            "abs_error_km2": 3.805100000000003,
+            "pct_error": 20.719968678547275
+          },
+          {
+            "event": "EMSR254_02SILVAN_02GRADING_MAP_v2_vector",
+            "gt_km2": 54.1398,
+            "pred_km2": 148.0984,
+            "error_km2": 93.95859999999999,
+            "abs_error_km2": 93.95859999999999,
+            "pct_error": 173.54807857655942
+          },
+          {
+            "event": "EMSR254_03PERENADELARIBERA_02GRADING_MAP_v2_vector",
+            "gt_km2": 16.3777,
+            "pred_km2": 40.0741,
+            "error_km2": 23.6964,
+            "abs_error_km2": 23.6964,
+            "pct_error": 144.6868945658459
+          },
+          {
+            "event": "EMSR281_01KIRTOMY_02GRADING_MAP_v1_vector",
+            "gt_km2": 14.7994,
+            "pred_km2": 4.589,
+            "error_km2": -10.2104,
+            "abs_error_km2": 10.2104,
+            "pct_error": 68.99193954353585
+          }
+        ]
+      }
+    },
+    "S1_VH_only": {
+      "description": "SAR Cross-Pol (VH only)",
+      "in_channels": 1,
+      "channel_indices": [
+        7
+      ],
+      "metrics": {
+        "iou": 0.14256584294417418,
+        "dice": 0.24955383328598238,
+        "precision": 0.22031362456992365,
+        "recall": 0.2877433749266393,
+        "f1": 0.24955383328598238,
+        "accuracy": 0.6324870991256979,
+        "tp": 1697982,
+        "fp": 6009131,
+        "tn": 15877104,
+        "fn": 4203047,
+        "total_pixels": 27787264,
+        "gt_burned_percentage": 21.236452066673344,
+        "pred_burned_percentage": 27.736134799021496
+      },
+      "burned_area": {
+        "total_gt_km2": 590.1029,
+        "total_pred_km2": 768.8899,
+        "total_bias_km2": 178.78700000000003,
+        "total_bias_pct": 30.297597249564447,
+        "mae_event_km2": 27.231659999999998,
+        "mape_event_pct": 80.08083185803783,
+        "pearson_r": 0.7314683918750151,
+        "r2_score": 0.5350460083122208,
+        "event_breakdown": [
+          {
+            "event": "EMSR227_01ENCINEDO_02GRADING_MAP_v2_vector",
+            "gt_km2": 103.0314,
+            "pred_km2": 101.92240000000001,
+            "error_km2": -1.1089999999999947,
+            "abs_error_km2": 1.1089999999999947,
+            "pct_error": 1.07637078828679
+          },
+          {
+            "event": "EMSR227_02CORPORALES_02GRADING_MAP_v2_vector",
+            "gt_km2": 57.813100000000006,
+            "pred_km2": 81.23780000000001,
+            "error_km2": 23.4247,
+            "abs_error_km2": 23.4247,
+            "pct_error": 40.51797248063631
+          },
+          {
+            "event": "EMSR227_03SANTAEULALIADECABRERA_02GRADING_MAP_v2_vector",
+            "gt_km2": 120.4171,
+            "pred_km2": 85.79180000000001,
+            "error_km2": -34.625299999999996,
+            "abs_error_km2": 34.625299999999996,
+            "pct_error": 28.754468530261185
+          },
+          {
+            "event": "EMSR227_04TRUCHILLAS_02GRADING_MAP_v2_vector",
+            "gt_km2": 61.107800000000005,
+            "pred_km2": 54.2703,
+            "error_km2": -6.837500000000006,
+            "abs_error_km2": 6.837500000000006,
+            "pct_error": 11.189240786079562
+          },
+          {
+            "event": "EMSR248_01PINODELORO_02GRADING_MAP_v1_vector",
+            "gt_km2": 115.976,
+            "pred_km2": 156.5843,
+            "error_km2": 40.608300000000014,
+            "abs_error_km2": 40.608300000000014,
+            "pct_error": 35.01439651183035
+          },
+          {
+            "event": "EMSR248_04HOYOSDEMIGUELMUNOZ_02GRADING_MAP_v1_vector",
+            "gt_km2": 28.0762,
+            "pred_km2": 54.3158,
+            "error_km2": 26.239600000000003,
+            "abs_error_km2": 26.239600000000003,
+            "pct_error": 93.4584831784632
+          },
+          {
+            "event": "EMSR254_01PORTELADEAGUIAR_02GRADING_MAP_v2_vector",
+            "gt_km2": 18.3644,
+            "pred_km2": 83.18860000000001,
+            "error_km2": 64.8242,
+            "abs_error_km2": 64.8242,
+            "pct_error": 352.9881983684747
+          },
+          {
+            "event": "EMSR254_02SILVAN_02GRADING_MAP_v2_vector",
+            "gt_km2": 54.1398,
+            "pred_km2": 105.96470000000001,
+            "error_km2": 51.82490000000001,
+            "abs_error_km2": 51.82490000000001,
+            "pct_error": 95.72419999257478
+          },
+          {
+            "event": "EMSR254_03PERENADELARIBERA_02GRADING_MAP_v2_vector",
+            "gt_km2": 16.3777,
+            "pred_km2": 35.0078,
+            "error_km2": 18.630100000000002,
+            "abs_error_km2": 18.630100000000002,
+            "pct_error": 113.75277740294585
+          },
+          {
+            "event": "EMSR281_01KIRTOMY_02GRADING_MAP_v1_vector",
+            "gt_km2": 14.7994,
+            "pred_km2": 10.6064,
+            "error_km2": -4.193,
+            "abs_error_km2": 4.193,
+            "pct_error": 28.332210540825614
+          }
+        ]
+      }
+    },
+    "S1_VV_VH": {
+      "description": "SAR Dual-Pol without ratio (VV+VH)",
+      "in_channels": 2,
+      "channel_indices": [
+        6,
+        7
+      ],
+      "metrics": {
+        "iou": 0.20470160790113123,
+        "dice": 0.33983785953065804,
+        "precision": 0.27554067999911647,
+        "recall": 0.44327591001500855,
+        "f1": 0.33983785953065804,
+        "accuracy": 0.6342663315107214,
+        "tp": 2615784,
+        "fp": 6877493,
+        "tn": 15008742,
+        "fn": 3285245,
+        "total_pixels": 27787264,
+        "gt_burned_percentage": 21.236452066673344,
+        "pred_burned_percentage": 34.164130012943936
+      },
+      "burned_area": {
+        "total_gt_km2": 590.1029,
+        "total_pred_km2": 948.2462,
+        "total_bias_km2": 358.14330000000007,
+        "total_bias_pct": 60.691669198710954,
+        "mae_event_km2": 39.22131,
+        "mape_event_pct": 87.73064944042265,
+        "pearson_r": 0.8122520827258096,
+        "r2_score": 0.6597534458924157,
+        "event_breakdown": [
+          {
+            "event": "EMSR227_01ENCINEDO_02GRADING_MAP_v2_vector",
+            "gt_km2": 103.0314,
+            "pred_km2": 164.155,
+            "error_km2": 61.123599999999996,
+            "abs_error_km2": 61.123599999999996,
+            "pct_error": 59.325209661791476
+          },
+          {
+            "event": "EMSR227_02CORPORALES_02GRADING_MAP_v2_vector",
+            "gt_km2": 57.813100000000006,
+            "pred_km2": 96.1208,
+            "error_km2": 38.3077,
+            "abs_error_km2": 38.3077,
+            "pct_error": 66.26126842164345
+          },
+          {
+            "event": "EMSR227_03SANTAEULALIADECABRERA_02GRADING_MAP_v2_vector",
+            "gt_km2": 120.4171,
+            "pred_km2": 111.7132,
+            "error_km2": -8.703900000000004,
+            "abs_error_km2": 8.703900000000004,
+            "pct_error": 7.228125637627414
+          },
+          {
+            "event": "EMSR227_04TRUCHILLAS_02GRADING_MAP_v2_vector",
+            "gt_km2": 61.107800000000005,
+            "pred_km2": 87.6061,
+            "error_km2": 26.498299999999993,
+            "abs_error_km2": 26.498299999999993,
+            "pct_error": 43.3631969465114
+          },
+          {
+            "event": "EMSR248_01PINODELORO_02GRADING_MAP_v1_vector",
+            "gt_km2": 115.976,
+            "pred_km2": 173.89100000000002,
+            "error_km2": 57.91500000000002,
+            "abs_error_km2": 57.91500000000002,
+            "pct_error": 49.93705163679973
+          },
+          {
+            "event": "EMSR248_04HOYOSDEMIGUELMUNOZ_02GRADING_MAP_v1_vector",
+            "gt_km2": 28.0762,
+            "pred_km2": 65.7268,
+            "error_km2": 37.6506,
+            "abs_error_km2": 37.6506,
+            "pct_error": 134.1014332062625
+          },
+          {
+            "event": "EMSR254_01PORTELADEAGUIAR_02GRADING_MAP_v2_vector",
+            "gt_km2": 18.3644,
+            "pred_km2": 44.0337,
+            "error_km2": 25.669300000000003,
+            "abs_error_km2": 25.669300000000003,
+            "pct_error": 139.77742818854514
+          },
+          {
+            "event": "EMSR254_02SILVAN_02GRADING_MAP_v2_vector",
+            "gt_km2": 54.1398,
+            "pred_km2": 162.2958,
+            "error_km2": 108.156,
+            "abs_error_km2": 108.156,
+            "pct_error": 199.7716652496564
+          },
+          {
+            "event": "EMSR254_03PERENADELARIBERA_02GRADING_MAP_v2_vector",
+            "gt_km2": 16.3777,
+            "pred_km2": 36.235400000000006,
+            "error_km2": 19.857700000000005,
+            "abs_error_km2": 19.857700000000005,
+            "pct_error": 121.24833081059565
+          },
+          {
+            "event": "EMSR281_01KIRTOMY_02GRADING_MAP_v1_vector",
+            "gt_km2": 14.7994,
+            "pred_km2": 6.4684,
+            "error_km2": -8.331,
+            "abs_error_km2": 8.331,
+            "pct_error": 56.29278464479327
+          }
+        ]
+      }
+    },
+    "S2_RGB_only": {
+      "description": "Optical Visible Only (B2,B3,B4)",
+      "in_channels": 3,
+      "channel_indices": [
+        0,
+        1,
+        2
+      ],
+      "metrics": {
+        "iou": 0.5804544221436806,
+        "dice": 0.7345411724766725,
+        "precision": 0.719522973797484,
+        "recall": 0.7501996685662662,
+        "f1": 0.7345411724766725,
+        "accuracy": 0.8848484327208289,
+        "tp": 4426950,
+        "fp": 1725668,
+        "tn": 20160567,
+        "fn": 1474079,
+        "total_pixels": 27787264,
+        "gt_burned_percentage": 21.236452066673344,
+        "pred_burned_percentage": 22.141863265127427
+      },
+      "burned_area": {
+        "total_gt_km2": 590.1029,
+        "total_pred_km2": 614.9066,
+        "total_bias_km2": 24.80370000000005,
+        "total_bias_pct": 4.203283867949141,
+        "mae_event_km2": 21.528270000000003,
+        "mape_event_pct": 51.89859731683047,
+        "pearson_r": 0.790256130893422,
+        "r2_score": 0.6245047524146414,
+        "event_breakdown": [
+          {
+            "event": "EMSR227_01ENCINEDO_02GRADING_MAP_v2_vector",
+            "gt_km2": 103.0314,
+            "pred_km2": 88.88730000000001,
+            "error_km2": -14.144099999999995,
+            "abs_error_km2": 14.144099999999995,
+            "pct_error": 13.727949564118353
+          },
+          {
+            "event": "EMSR227_02CORPORALES_02GRADING_MAP_v2_vector",
+            "gt_km2": 57.813100000000006,
+            "pred_km2": 45.6329,
+            "error_km2": -12.180200000000006,
+            "abs_error_km2": 12.180200000000006,
+            "pct_error": 21.068231755738456
+          },
+          {
+            "event": "EMSR227_03SANTAEULALIADECABRERA_02GRADING_MAP_v2_vector",
+            "gt_km2": 120.4171,
+            "pred_km2": 80.0395,
+            "error_km2": -40.3776,
+            "abs_error_km2": 40.3776,
+            "pct_error": 33.531447482836946
+          },
+          {
+            "event": "EMSR227_04TRUCHILLAS_02GRADING_MAP_v2_vector",
+            "gt_km2": 61.107800000000005,
+            "pred_km2": 33.9711,
+            "error_km2": -27.136700000000005,
+            "abs_error_km2": 27.136700000000005,
+            "pct_error": 44.40790792535357
+          },
+          {
+            "event": "EMSR248_01PINODELORO_02GRADING_MAP_v1_vector",
+            "gt_km2": 115.976,
+            "pred_km2": 160.02970000000002,
+            "error_km2": 44.05370000000002,
+            "abs_error_km2": 44.05370000000002,
+            "pct_error": 37.98518331506664
+          },
+          {
+            "event": "EMSR248_04HOYOSDEMIGUELMUNOZ_02GRADING_MAP_v1_vector",
+            "gt_km2": 28.0762,
+            "pred_km2": 26.6753,
+            "error_km2": -1.4009,
+            "abs_error_km2": 1.4009,
+            "pct_error": 4.989633572337577
+          },
+          {
+            "event": "EMSR254_01PORTELADEAGUIAR_02GRADING_MAP_v2_vector",
+            "gt_km2": 18.3644,
+            "pred_km2": 19.470200000000002,
+            "error_km2": 1.1058000000000021,
+            "abs_error_km2": 1.1058000000000021,
+            "pct_error": 6.021429493242648
+          },
+          {
+            "event": "EMSR254_02SILVAN_02GRADING_MAP_v2_vector",
+            "gt_km2": 54.1398,
+            "pred_km2": 82.6864,
+            "error_km2": 28.546600000000005,
+            "abs_error_km2": 28.546600000000005,
+            "pct_error": 52.72755851932248
+          },
+          {
+            "event": "EMSR254_03PERENADELARIBERA_02GRADING_MAP_v2_vector",
+            "gt_km2": 16.3777,
+            "pred_km2": 29.5454,
+            "error_km2": 13.1677,
+            "abs_error_km2": 13.1677,
+            "pct_error": 80.40012919999194
+          },
+          {
+            "event": "EMSR281_01KIRTOMY_02GRADING_MAP_v1_vector",
+            "gt_km2": 14.7994,
+            "pred_km2": 47.9688,
+            "error_km2": 33.1694,
+            "abs_error_km2": 33.1694,
+            "pct_error": 224.12650234029604
+          }
+        ]
+      }
+    },
+    "S2_NIR_SWIR": {
+      "description": "Optical Infrared Only (B8,B11,B12)",
+      "in_channels": 3,
+      "channel_indices": [
+        3,
+        4,
+        5
+      ],
+      "metrics": {
+        "iou": 0.6838023433463347,
+        "dice": 0.812212129349301,
+        "precision": 0.7922708505686692,
+        "recall": 0.8331831617841425,
+        "f1": 0.812212129349301,
+        "accuracy": 0.9181816892803807,
+        "tp": 4916638,
+        "fp": 1289116,
+        "tn": 20597119,
+        "fn": 984391,
+        "total_pixels": 27787264,
+        "gt_burned_percentage": 21.236452066673344,
+        "pred_burned_percentage": 22.333087561265398
+      },
+      "burned_area": {
+        "total_gt_km2": 590.1029,
+        "total_pred_km2": 620.3864,
+        "total_bias_km2": 30.283500000000004,
+        "total_bias_pct": 5.131901571742827,
+        "mae_event_km2": 8.951530000000002,
+        "mape_event_pct": 18.31780929316613,
+        "pearson_r": 0.9452827375218664,
+        "r2_score": 0.8935594538568336,
+        "event_breakdown": [
+          {
+            "event": "EMSR227_01ENCINEDO_02GRADING_MAP_v2_vector",
+            "gt_km2": 103.0314,
+            "pred_km2": 110.60180000000001,
+            "error_km2": 7.5704000000000065,
+            "abs_error_km2": 7.5704000000000065,
+            "pct_error": 7.347662232323139
+          },
+          {
+            "event": "EMSR227_02CORPORALES_02GRADING_MAP_v2_vector",
+            "gt_km2": 57.813100000000006,
+            "pred_km2": 59.2075,
+            "error_km2": 1.3943999999999974,
+            "abs_error_km2": 1.3943999999999974,
+            "pct_error": 2.411909686228603
+          },
+          {
+            "event": "EMSR227_03SANTAEULALIADECABRERA_02GRADING_MAP_v2_vector",
+            "gt_km2": 120.4171,
+            "pred_km2": 111.5437,
+            "error_km2": -8.873400000000004,
+            "abs_error_km2": 8.873400000000004,
+            "pct_error": 7.368886365068887
+          },
+          {
+            "event": "EMSR227_04TRUCHILLAS_02GRADING_MAP_v2_vector",
+            "gt_km2": 61.107800000000005,
+            "pred_km2": 40.8762,
+            "error_km2": -20.231600000000007,
+            "abs_error_km2": 20.231600000000007,
+            "pct_error": 33.108042981739985
+          },
+          {
+            "event": "EMSR248_01PINODELORO_02GRADING_MAP_v1_vector",
+            "gt_km2": 115.976,
+            "pred_km2": 121.3275,
+            "error_km2": 5.3515000000000015,
+            "abs_error_km2": 5.3515000000000015,
+            "pct_error": 4.61431635732252
+          },
+          {
+            "event": "EMSR248_04HOYOSDEMIGUELMUNOZ_02GRADING_MAP_v1_vector",
+            "gt_km2": 28.0762,
+            "pred_km2": 29.1538,
+            "error_km2": 1.0776000000000003,
+            "abs_error_km2": 1.0776000000000003,
+            "pct_error": 3.8381248751166925
+          },
+          {
+            "event": "EMSR254_01PORTELADEAGUIAR_02GRADING_MAP_v2_vector",
+            "gt_km2": 18.3644,
+            "pred_km2": 25.7013,
+            "error_km2": 7.3369,
+            "abs_error_km2": 7.3369,
+            "pct_error": 39.951732726507416
+          },
+          {
+            "event": "EMSR254_02SILVAN_02GRADING_MAP_v2_vector",
+            "gt_km2": 54.1398,
+            "pred_km2": 88.3892,
+            "error_km2": 34.2494,
+            "abs_error_km2": 34.2494,
+            "pct_error": 63.26102732905786
+          },
+          {
+            "event": "EMSR254_03PERENADELARIBERA_02GRADING_MAP_v2_vector",
+            "gt_km2": 16.3777,
+            "pred_km2": 19.2969,
+            "error_km2": 2.9192,
+            "abs_error_km2": 2.9192,
+            "pct_error": 17.824225731191966
+          },
+          {
+            "event": "EMSR281_01KIRTOMY_02GRADING_MAP_v1_vector",
+            "gt_km2": 14.7994,
+            "pred_km2": 14.2885,
+            "error_km2": -0.5108999999999995,
+            "abs_error_km2": 0.5108999999999995,
+            "pct_error": 3.4521646471041714
+          }
+        ]
+      }
+    },
+    "S1_Full": {
+      "description": "SAR Full 3-channel Baseline (VV, VH, VV/VH ratio)",
+      "in_channels": 3,
+      "channel_indices": [
+        6,
+        7,
+        8
+      ],
+      "metrics": {
+        "iou": 0.20300263112336434,
+        "dice": 0.33749324543671266,
+        "precision": 0.34440221227049944,
+        "recall": 0.33085602527965324,
+        "f1": 0.33749324543671266,
+        "accuracy": 0.724147940581697,
+        "tp": 1952391,
+        "fp": 3716536,
+        "tn": 18169699,
+        "fn": 3948638,
+        "total_pixels": 27787264,
+        "gt_burned_percentage": 21.236452066673344,
+        "pred_burned_percentage": 20.401170118799676
+      },
+      "burned_area": {
+        "total_gt_km2": 590.1029,
+        "total_pred_km2": 563.9746,
+        "total_bias_km2": -26.128299999999967,
+        "total_bias_pct": -4.427753193553187,
+        "mae_event_km2": 31.34483,
+        "mape_event_pct": 47.94733029571603,
+        "pearson_r": 0.590715764211882,
+        "r2_score": 0.3489451140884279,
+        "event_breakdown": [
+          {
+            "event": "EMSR227_01ENCINEDO_02GRADING_MAP_v2_vector",
+            "gt_km2": 103.0314,
+            "pred_km2": 169.35670000000002,
+            "error_km2": 66.32530000000001,
+            "abs_error_km2": 66.32530000000001,
+            "pct_error": 64.37386424198213
+          },
+          {
+            "event": "EMSR227_02CORPORALES_02GRADING_MAP_v2_vector",
+            "gt_km2": 57.813100000000006,
+            "pred_km2": 44.427400000000006,
+            "error_km2": -13.3857,
+            "abs_error_km2": 13.3857,
+            "pct_error": 23.153398943596006
+          },
+          {
+            "event": "EMSR227_03SANTAEULALIADECABRERA_02GRADING_MAP_v2_vector",
+            "gt_km2": 120.4171,
+            "pred_km2": 71.5276,
+            "error_km2": -48.8895,
+            "abs_error_km2": 48.8895,
+            "pct_error": 40.600127340707644
+          },
+          {
+            "event": "EMSR227_04TRUCHILLAS_02GRADING_MAP_v2_vector",
+            "gt_km2": 61.107800000000005,
+            "pred_km2": 38.2173,
+            "error_km2": -22.890500000000003,
+            "abs_error_km2": 22.890500000000003,
+            "pct_error": 37.45920529634429
+          },
+          {
+            "event": "EMSR248_01PINODELORO_02GRADING_MAP_v1_vector",
+            "gt_km2": 115.976,
+            "pred_km2": 49.7092,
+            "error_km2": -66.26679999999999,
+            "abs_error_km2": 66.26679999999999,
+            "pct_error": 57.138368529836455
+          },
+          {
+            "event": "EMSR248_04HOYOSDEMIGUELMUNOZ_02GRADING_MAP_v1_vector",
+            "gt_km2": 28.0762,
+            "pred_km2": 19.7356,
+            "error_km2": -8.340599999999998,
+            "abs_error_km2": 8.340599999999998,
+            "pct_error": 29.70700105178013
+          },
+          {
+            "event": "EMSR254_01PORTELADEAGUIAR_02GRADING_MAP_v2_vector",
+            "gt_km2": 18.3644,
+            "pred_km2": 9.110100000000001,
+            "error_km2": -9.254299999999999,
+            "abs_error_km2": 9.254299999999999,
+            "pct_error": 50.39257999576354
+          },
+          {
+            "event": "EMSR254_02SILVAN_02GRADING_MAP_v2_vector",
+            "gt_km2": 54.1398,
+            "pred_km2": 125.5355,
+            "error_km2": 71.3957,
+            "abs_error_km2": 71.3957,
+            "pct_error": 131.87283073213592
+          },
+          {
+            "event": "EMSR254_03PERENADELARIBERA_02GRADING_MAP_v2_vector",
+            "gt_km2": 16.3777,
+            "pred_km2": 15.6168,
+            "error_km2": -0.7609000000000012,
+            "abs_error_km2": 0.7609000000000012,
+            "pct_error": 4.64594867047958
+          },
+          {
+            "event": "EMSR281_01KIRTOMY_02GRADING_MAP_v1_vector",
+            "gt_km2": 14.7994,
+            "pred_km2": 20.738400000000002,
+            "error_km2": 5.939000000000002,
+            "abs_error_km2": 5.939000000000002,
+            "pct_error": 40.12997815453455
+          }
+        ]
+      }
+    },
+    "S2_Full": {
+      "description": "Optical Full 6-channel Baseline (RGB + NIR + SWIR1 + SWIR2)",
+      "in_channels": 6,
+      "channel_indices": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "metrics": {
+        "iou": 0.7055232941021413,
+        "dice": 0.8273393820440994,
+        "precision": 0.8418369181489509,
+        "recall": 0.8133327255297201,
+        "f1": 0.8273393820440994,
+        "accuracy": 0.927907547860772,
+        "tp": 4799500,
+        "fp": 901723,
+        "tn": 20984512,
+        "fn": 1101529,
+        "total_pixels": 27787264,
+        "gt_burned_percentage": 21.236452066673344,
+        "pred_burned_percentage": 20.517396027187058
+      },
+      "burned_area": {
+        "total_gt_km2": 590.1029,
+        "total_pred_km2": 570.0469,
+        "total_bias_km2": -20.055999999999926,
+        "total_bias_pct": -3.3987292724709413,
+        "mae_event_km2": 9.16944,
+        "mape_event_pct": 17.456747917324034,
+        "pearson_r": 0.9305323561305965,
+        "r2_score": 0.8658904658059594,
+        "event_breakdown": [
+          {
+            "event": "EMSR227_01ENCINEDO_02GRADING_MAP_v2_vector",
+            "gt_km2": 103.0314,
+            "pred_km2": 103.6794,
+            "error_km2": 0.6479999999999961,
+            "abs_error_km2": 0.6479999999999961,
+            "pct_error": 0.6289344191251931
+          },
+          {
+            "event": "EMSR227_02CORPORALES_02GRADING_MAP_v2_vector",
+            "gt_km2": 57.813100000000006,
+            "pred_km2": 52.0555,
+            "error_km2": -5.757600000000004,
+            "abs_error_km2": 5.757600000000004,
+            "pct_error": 9.95898681112295
+          },
+          {
+            "event": "EMSR227_03SANTAEULALIADECABRERA_02GRADING_MAP_v2_vector",
+            "gt_km2": 120.4171,
+            "pred_km2": 106.149,
+            "error_km2": -14.268100000000004,
+            "abs_error_km2": 14.268100000000004,
+            "pct_error": 11.848897552847767
+          },
+          {
+            "event": "EMSR227_04TRUCHILLAS_02GRADING_MAP_v2_vector",
+            "gt_km2": 61.107800000000005,
+            "pred_km2": 26.4509,
+            "error_km2": -34.65690000000001,
+            "abs_error_km2": 34.65690000000001,
+            "pct_error": 56.71435451540483
+          },
+          {
+            "event": "EMSR248_01PINODELORO_02GRADING_MAP_v1_vector",
+            "gt_km2": 115.976,
+            "pred_km2": 118.1708,
+            "error_km2": 2.1948000000000008,
+            "abs_error_km2": 2.1948000000000008,
+            "pct_error": 1.8924603458939488
+          },
+          {
+            "event": "EMSR248_04HOYOSDEMIGUELMUNOZ_02GRADING_MAP_v1_vector",
+            "gt_km2": 28.0762,
+            "pred_km2": 27.6993,
+            "error_km2": -0.3768999999999991,
+            "abs_error_km2": 0.3768999999999991,
+            "pct_error": 1.3424176553744223
+          },
+          {
+            "event": "EMSR254_01PORTELADEAGUIAR_02GRADING_MAP_v2_vector",
+            "gt_km2": 18.3644,
+            "pred_km2": 21.5322,
+            "error_km2": 3.1677999999999997,
+            "abs_error_km2": 3.1677999999999997,
+            "pct_error": 17.249669333237495
+          },
+          {
+            "event": "EMSR254_02SILVAN_02GRADING_MAP_v2_vector",
+            "gt_km2": 54.1398,
+            "pred_km2": 80.5762,
+            "error_km2": 26.4364,
+            "abs_error_km2": 26.4364,
+            "pct_error": 48.82987214029749
+          },
+          {
+            "event": "EMSR254_03PERENADELARIBERA_02GRADING_MAP_v2_vector",
+            "gt_km2": 16.3777,
+            "pred_km2": 19.7499,
+            "error_km2": 3.3721999999999994,
+            "abs_error_km2": 3.3721999999999994,
+            "pct_error": 20.590180190026565
+          },
+          {
+            "event": "EMSR281_01KIRTOMY_02GRADING_MAP_v1_vector",
+            "gt_km2": 14.7994,
+            "pred_km2": 13.9837,
+            "error_km2": -0.8156999999999996,
+            "abs_error_km2": 0.8156999999999996,
+            "pct_error": 5.5117062099097165
+          }
+        ]
+      }
+    },
+    "Multimodal_Fusion": {
+      "description": "Multimodal Early Concatenation (S2 6-ch + S1 3-ch = 9-ch)",
+      "in_channels": 9,
+      "channel_indices": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "metrics": {
+        "iou": 0.6999279517752416,
+        "dice": 0.8234795492883142,
+        "precision": 0.8395728375326954,
+        "recall": 0.80799162315588,
+        "f1": 0.8234795492883142,
+        "accuracy": 0.9264367301509032,
+        "tp": 4767982,
+        "fp": 911075,
+        "tn": 20975160,
+        "fn": 1133047,
+        "total_pixels": 27787264,
+        "gt_burned_percentage": 21.236452066673344,
+        "pred_burned_percentage": 20.43762566908343
+      },
+      "burned_area": {
+        "total_gt_km2": 590.1029,
+        "total_pred_km2": 567.8058,
+        "total_bias_km2": -22.2971,
+        "total_bias_pct": -3.778510493678306,
+        "mae_event_km2": 11.262270000000001,
+        "mape_event_pct": 20.27652012020422,
+        "pearson_r": 0.9061380906093701,
+        "r2_score": 0.8210862392531955,
+        "event_breakdown": [
+          {
+            "event": "EMSR227_01ENCINEDO_02GRADING_MAP_v2_vector",
+            "gt_km2": 103.0314,
+            "pred_km2": 105.0177,
+            "error_km2": 1.9863,
+            "abs_error_km2": 1.9863,
+            "pct_error": 1.927858698624041
+          },
+          {
+            "event": "EMSR227_02CORPORALES_02GRADING_MAP_v2_vector",
+            "gt_km2": 57.813100000000006,
+            "pred_km2": 54.1255,
+            "error_km2": -3.6876000000000033,
+            "abs_error_km2": 3.6876000000000033,
+            "pct_error": 6.378484049725058
+          },
+          {
+            "event": "EMSR227_03SANTAEULALIADECABRERA_02GRADING_MAP_v2_vector",
+            "gt_km2": 120.4171,
+            "pred_km2": 92.92760000000001,
+            "error_km2": -27.489499999999992,
+            "abs_error_km2": 27.489499999999992,
+            "pct_error": 22.82856647199056
+          },
+          {
+            "event": "EMSR227_04TRUCHILLAS_02GRADING_MAP_v2_vector",
+            "gt_km2": 61.107800000000005,
+            "pred_km2": 24.825,
+            "error_km2": -36.28280000000001,
+            "abs_error_km2": 36.28280000000001,
+            "pct_error": 59.375061878342564
+          },
+          {
+            "event": "EMSR248_01PINODELORO_02GRADING_MAP_v1_vector",
+            "gt_km2": 115.976,
+            "pred_km2": 122.5708,
+            "error_km2": 6.594800000000006,
+            "abs_error_km2": 6.594800000000006,
+            "pct_error": 5.686348409468481
+          },
+          {
+            "event": "EMSR248_04HOYOSDEMIGUELMUNOZ_02GRADING_MAP_v1_vector",
+            "gt_km2": 28.0762,
+            "pred_km2": 29.2666,
+            "error_km2": 1.1904000000000003,
+            "abs_error_km2": 1.1904000000000003,
+            "pct_error": 4.239888503469665
+          },
+          {
+            "event": "EMSR254_01PORTELADEAGUIAR_02GRADING_MAP_v2_vector",
+            "gt_km2": 18.3644,
+            "pred_km2": 21.7376,
+            "error_km2": 3.3732000000000006,
+            "abs_error_km2": 3.3732000000000006,
+            "pct_error": 18.368137065116716
+          },
+          {
+            "event": "EMSR254_02SILVAN_02GRADING_MAP_v2_vector",
+            "gt_km2": 54.1398,
+            "pred_km2": 80.416,
+            "error_km2": 26.276199999999996,
+            "abs_error_km2": 26.276199999999996,
+            "pct_error": 48.53397158209457
+          },
+          {
+            "event": "EMSR254_03PERENADELARIBERA_02GRADING_MAP_v2_vector",
+            "gt_km2": 16.3777,
+            "pred_km2": 21.555,
+            "error_km2": 5.177299999999999,
+            "abs_error_km2": 5.177299999999999,
+            "pct_error": 31.61186759321052
+          },
+          {
+            "event": "EMSR281_01KIRTOMY_02GRADING_MAP_v1_vector",
+            "gt_km2": 14.7994,
+            "pred_km2": 15.364,
+            "error_km2": 0.5646000000000004,
+            "abs_error_km2": 0.5646000000000004,
+            "pct_error": 3.8150169500000364
+          }
+        ]
+      }
+    }
+  },
+  "feature_sensitivity_analysis": {
+    "Fusion_Baseline_All9": {
+      "description": "All 9 channels active (Baseline)",
+      "masked_channels": [],
+      "iou": 0.6999279517752416,
+      "dice": 0.8234795492883142,
+      "precision": 0.8395728375326954,
+      "recall": 0.80799162315588,
+      "delta_iou_pct": 0.0,
+      "delta_dice_pct": 0.0
+    },
+    "Mask_S1_SAR_All": {
+      "description": "Masked S1 SAR (Bands 6,7,8 -> Optical Only)",
+      "masked_channels": [
+        6,
+        7,
+        8
+      ],
+      "iou": 0.6944355422226548,
+      "dice": 0.8196659299435345,
+      "precision": 0.8752065468446247,
+      "recall": 0.770753880382544,
+      "delta_iou_pct": -0.5492409552586786,
+      "delta_dice_pct": -0.38136193447797506
+    },
+    "Mask_S2_Optical_All": {
+      "description": "Masked S2 Optical (Bands 0..5 -> SAR Only)",
+      "masked_channels": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "iou": 0.0,
+      "dice": 0.0,
+      "precision": 0.0,
+      "recall": 0.0,
+      "delta_iou_pct": -69.99279517752416,
+      "delta_dice_pct": -82.34795492883143
+    },
+    "Mask_VV_Only": {
+      "description": "Masked VV Band",
+      "masked_channels": [
+        6
+      ],
+      "iou": 0.7012430572421852,
+      "dice": 0.8243890304292454,
+      "precision": 0.8548136388830807,
+      "recall": 0.7960557387533463,
+      "delta_iou_pct": 0.1315105466943578,
+      "delta_dice_pct": 0.09094811409311454
+    },
+    "Mask_VH_Only": {
+      "description": "Masked VH Band",
+      "masked_channels": [
+        7
+      ],
+      "iou": 0.70021231219398,
+      "dice": 0.8236763222710877,
+      "precision": 0.855832943434549,
+      "recall": 0.7938486660546696,
+      "delta_iou_pct": 0.028436041873836082,
+      "delta_dice_pct": 0.01967729827734299
+    },
+    "Mask_Ratio_Only": {
+      "description": "Masked VV/VH Ratio Band",
+      "masked_channels": [
+        8
+      ],
+      "iou": 0.7042730456201667,
+      "dice": 0.8264791224975212,
+      "precision": 0.8475422968720574,
+      "recall": 0.8064374874280265,
+      "delta_iou_pct": 0.43450938449250964,
+      "delta_dice_pct": 0.29995732092069627
+    },
+    "Mask_RGB_Only": {
+      "description": "Masked Optical RGB (B2,B3,B4)",
+      "masked_channels": [
+        0,
+        1,
+        2
+      ],
+      "iou": 0.3876095152306995,
+      "dice": 0.5586723224022527,
+      "precision": 0.9471545505960823,
+      "recall": 0.39617734466310206,
+      "delta_iou_pct": -31.23184365445421,
+      "delta_dice_pct": -26.48072268860615
+    },
+    "Mask_NIR_Only": {
+      "description": "Masked Optical NIR (B8)",
+      "masked_channels": [
+        3
+      ],
+      "iou": 0.5687483319271466,
+      "dice": 0.7250982459735414,
+      "precision": 0.8954175435048081,
+      "recall": 0.6092176466172153,
+      "delta_iou_pct": -13.1179619848095,
+      "delta_dice_pct": -9.838130331477279
+    },
+    "Mask_SWIR_Only": {
+      "description": "Masked Optical SWIR (B11,B12)",
+      "masked_channels": [
+        4,
+        5
+      ],
+      "iou": 0.4142353188242698,
+      "dice": 0.5858081937433806,
+      "precision": 0.7145423414004006,
+      "recall": 0.496379021353725,
+      "delta_iou_pct": -28.56926329509718,
+      "delta_dice_pct": -23.76713555449337
+    }
+  },
+  "statistical_tests": {
+    "S1_VV_only": {
+      "vs_model": "S2_Full",
+      "wilcoxon_stat": 1698.5,
+      "wilcoxon_p_val": 6.764637687850652e-47,
+      "ttest_stat": -22.638303984002075,
+      "ttest_p_val": 6.520518093981324e-75,
+      "significant_at_005": true,
+      "mean_iou_diff_pct": -46.995662638320255
+    },
+    "S1_VH_only": {
+      "vs_model": "S2_Full",
+      "wilcoxon_stat": 4435.0,
+      "wilcoxon_p_val": 1.394605385788171e-38,
+      "ttest_stat": -19.234294652478845,
+      "ttest_p_val": 1.0776170435419871e-59,
+      "significant_at_005": true,
+      "mean_iou_diff_pct": -44.091045846293724
+    },
+    "S1_VV_VH": {
+      "vs_model": "S2_Full",
+      "wilcoxon_stat": 4196.0,
+      "wilcoxon_p_val": 2.0982865442867312e-39,
+      "ttest_stat": -18.26819410372236,
+      "ttest_p_val": 2.189536667093631e-55,
+      "significant_at_005": true,
+      "mean_iou_diff_pct": -40.59509654317214
+    },
+    "S2_RGB_only": {
+      "vs_model": "S2_Full",
+      "wilcoxon_stat": 8249.0,
+      "wilcoxon_p_val": 5.466325144441338e-22,
+      "ttest_stat": -8.342188736503825,
+      "ttest_p_val": 1.04079142494896e-15,
+      "significant_at_005": true,
+      "mean_iou_diff_pct": -15.221056759722302
+    },
+    "S2_NIR_SWIR": {
+      "vs_model": "S2_Full",
+      "wilcoxon_stat": 10570.0,
+      "wilcoxon_p_val": 2.1527318300056432e-18,
+      "ttest_stat": -8.65975951730672,
+      "ttest_p_val": 1.0059923879369583e-16,
+      "significant_at_005": true,
+      "mean_iou_diff_pct": -16.01104562325545
+    },
+    "S1_Full": {
+      "vs_model": "S2_Full",
+      "wilcoxon_stat": 1495.0,
+      "wilcoxon_p_val": 6.08674915188498e-47,
+      "ttest_stat": -21.787976826245835,
+      "ttest_p_val": 4.055674652648433e-71,
+      "significant_at_005": true,
+      "mean_iou_diff_pct": -45.236513278034984
+    },
+    "Multimodal_Fusion_vs_S2": {
+      "vs_model": "S2_Full",
+      "wilcoxon_stat": 13978.0,
+      "wilcoxon_p_val": 1.3613602880220027e-06,
+      "ttest_stat": -2.3264847869641376,
+      "ttest_p_val": 0.020464272377285417,
+      "significant_at_005": true,
+      "mean_iou_diff_pct": -3.726156899663946
+    }
+  },
+  "summary_table": [
+    {
+      "Model Variant": "S1_VV_only",
+      "Description": "SAR Single-Pol (VV only)",
+      "Channels": 1,
+      "Test IoU (%)": 15.04,
+      "Test Dice (%)": 26.14,
+      "Precision (%)": 22.51,
+      "Recall (%)": 31.17,
+      "Accuracy (%)": 62.6,
+      "Pred Area (km2)": 812.7,
+      "GT Area (km2)": 590.1,
+      "Area Bias (%)": 37.72,
+      "Area R2": 0.7112
+    },
+    {
+      "Model Variant": "S1_VH_only",
+      "Description": "SAR Cross-Pol (VH only)",
+      "Channels": 1,
+      "Test IoU (%)": 14.26,
+      "Test Dice (%)": 24.96,
+      "Precision (%)": 22.03,
+      "Recall (%)": 28.77,
+      "Accuracy (%)": 63.25,
+      "Pred Area (km2)": 768.9,
+      "GT Area (km2)": 590.1,
+      "Area Bias (%)": 30.3,
+      "Area R2": 0.535
+    },
+    {
+      "Model Variant": "S1_VV_VH",
+      "Description": "SAR Dual-Pol without ratio (VV+VH)",
+      "Channels": 2,
+      "Test IoU (%)": 20.47,
+      "Test Dice (%)": 33.98,
+      "Precision (%)": 27.55,
+      "Recall (%)": 44.33,
+      "Accuracy (%)": 63.43,
+      "Pred Area (km2)": 948.2,
+      "GT Area (km2)": 590.1,
+      "Area Bias (%)": 60.69,
+      "Area R2": 0.6598
+    },
+    {
+      "Model Variant": "S1_Full",
+      "Description": "SAR Full 3-channel Baseline (VV, VH, VV/VH ratio)",
+      "Channels": 3,
+      "Test IoU (%)": 20.3,
+      "Test Dice (%)": 33.75,
+      "Precision (%)": 34.44,
+      "Recall (%)": 33.09,
+      "Accuracy (%)": 72.41,
+      "Pred Area (km2)": 564.0,
+      "GT Area (km2)": 590.1,
+      "Area Bias (%)": -4.43,
+      "Area R2": 0.3489
+    },
+    {
+      "Model Variant": "S2_RGB_only",
+      "Description": "Optical Visible Only (B2,B3,B4)",
+      "Channels": 3,
+      "Test IoU (%)": 58.05,
+      "Test Dice (%)": 73.45,
+      "Precision (%)": 71.95,
+      "Recall (%)": 75.02,
+      "Accuracy (%)": 88.48,
+      "Pred Area (km2)": 614.9,
+      "GT Area (km2)": 590.1,
+      "Area Bias (%)": 4.2,
+      "Area R2": 0.6245
+    },
+    {
+      "Model Variant": "S2_NIR_SWIR",
+      "Description": "Optical Infrared Only (B8,B11,B12)",
+      "Channels": 3,
+      "Test IoU (%)": 68.38,
+      "Test Dice (%)": 81.22,
+      "Precision (%)": 79.23,
+      "Recall (%)": 83.32,
+      "Accuracy (%)": 91.82,
+      "Pred Area (km2)": 620.4,
+      "GT Area (km2)": 590.1,
+      "Area Bias (%)": 5.13,
+      "Area R2": 0.8936
+    },
+    {
+      "Model Variant": "S2_Full",
+      "Description": "Optical Full 6-channel Baseline (RGB + NIR + SWIR1 + SWIR2)",
+      "Channels": 6,
+      "Test IoU (%)": 70.55,
+      "Test Dice (%)": 82.73,
+      "Precision (%)": 84.18,
+      "Recall (%)": 81.33,
+      "Accuracy (%)": 92.79,
+      "Pred Area (km2)": 570.0,
+      "GT Area (km2)": 590.1,
+      "Area Bias (%)": -3.4,
+      "Area R2": 0.8659
+    },
+    {
+      "Model Variant": "Multimodal_Fusion",
+      "Description": "Multimodal Early Concatenation (S2 6-ch + S1 3-ch = 9-ch)",
+      "Channels": 9,
+      "Test IoU (%)": 69.99,
+      "Test Dice (%)": 82.35,
+      "Precision (%)": 83.96,
+      "Recall (%)": 80.8,
+      "Accuracy (%)": 92.64,
+      "Pred Area (km2)": 567.8,
+      "GT Area (km2)": 590.1,
+      "Area Bias (%)": -3.78,
+      "Area R2": 0.8211
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+# Stage 1: Dataset Inspection & Foundation Configuration
+version: "1.0.0"
+random_seed: 42
+
+dataset:
+  name: "Satellite Burned Area Dataset (Zenodo)"
+  root_path: "C:/Users/Sahil/OneDrive/Desktop/AI project/dataset/Zenodo"
+  catalog_file: "satellite_data.csv"
+  total_cataloged_events: 73
+  total_available_events: 62
+  missing_parts: ["part2"]
+  partial_download_file: "Unconfirmed 870433.crdownload"
+
+sensors:
+  sentinel_1:
+    bands: ["VV", "VH", "VV_VH_ratio_div_50", "validity_mask"]
+    num_channels: 4
+    dtype: "float32"
+    crs: "EPSG:4326"
+    resolution_meters: ~10.0
+  sentinel_2:
+    bands: ["B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B8A", "B9", "B11", "B12", "validity_mask"]
+    num_channels: 13
+    dtype: "float32"
+    crs: "EPSG:4326"
+    resolution_meters: ~10.0
+
+ground_truth:
+  source: "Copernicus Emergency Management Service (CEMS) Rapid Mapping Grading Maps"
+  original_classes:
+    0: "Unburned / Background"
+    32: "Unburned AOI / Negligible Damage"
+    64: "Moderately Damaged (Grade 1)"
+    128: "Highly Damaged (Grade 2)"
+    192: "Completely Destroyed (Grade 3)"
+    255: "Delineated Burned Area / Severe Destruction"
+  binary_mapping:
+    class_0_unburned: [0, 32]
+    class_1_burned: [64, 128, 192, 255]
+
+official_folds:
+  test_fold: "cyan"
+  val_fold: "purple"
+  train_folds: ["coral", "grey", "lime", "magenta", "pink"]

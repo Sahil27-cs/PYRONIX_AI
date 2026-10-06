@@ -1,0 +1,112 @@
+{
+  "shared_test_events": {
+    "count": 10,
+    "events": [
+      "01ENCINEDO_02GRADING_MAP_v2_vector",
+      "01KIRTOMY_02GRADING_MAP_v1_vector",
+      "01PINODELORO_02GRADING_MAP_v1_vector",
+      "01PORTELADEAGUIAR_02GRADING_MAP_v2_vector",
+      "02CORPORALES_02GRADING_MAP_v2_vector",
+      "02SILVAN_02GRADING_MAP_v2_vector",
+      "03PERENADELARIBERA_02GRADING_MAP_v2_vector",
+      "03SANTAEULALIADECABRERA_02GRADING_MAP_v2_vector",
+      "04HOYOSDEMIGUELMUNOZ_02GRADING_MAP_v1_vector",
+      "04TRUCHILLAS_02GRADING_MAP_v2_vector"
+    ],
+    "s2_shared_patches": 427,
+    "s1_shared_patches": 424
+  },
+  "performance_comparison": [
+    {
+      "metric": "IoU (Jaccard)",
+      "sentinel2_optical": 0.7060882607586453,
+      "sentinel1_sar": 0.19138565830646617,
+      "difference_s2_minus_s1": 51.470260245217915
+    },
+    {
+      "metric": "Dice / F1 Score",
+      "sentinel2_optical": 0.8277277055346121,
+      "sentinel1_sar": 0.32128246126198556,
+      "difference_s2_minus_s1": 50.64452442726265
+    },
+    {
+      "metric": "Precision",
+      "sentinel2_optical": 0.8421746459179326,
+      "sentinel1_sar": 0.3483500627017094,
+      "difference_s2_minus_s1": 49.382458321622316
+    },
+    {
+      "metric": "Recall",
+      "sentinel2_optical": 0.8137680610349609,
+      "sentinel1_sar": 0.2981180061985749,
+      "difference_s2_minus_s1": 51.5650054836386
+    },
+    {
+      "metric": "Pixel Accuracy",
+      "sentinel2_optical": 0.9281120568304453,
+      "sentinel1_sar": 0.7325132837835321,
+      "difference_s2_minus_s1": 19.55987730469132
+    },
+    {
+      "metric": "True Positives (TP)",
+      "sentinel2_optical": 4832879,
+      "sentinel1_sar": 1759203,
+      "difference_s2_minus_s1": 3073676
+    },
+    {
+      "metric": "False Positives (FP)",
+      "sentinel2_optical": 905692,
+      "sentinel1_sar": 3290898,
+      "difference_s2_minus_s1": -2385206
+    },
+    {
+      "metric": "True Negatives (TN)",
+      "sentinel2_optical": 21139290,
+      "sentinel1_sar": 18595337,
+      "difference_s2_minus_s1": 2543953
+    },
+    {
+      "metric": "False Negatives (FN)",
+      "sentinel2_optical": 1106011,
+      "sentinel1_sar": 4141826,
+      "difference_s2_minus_s1": -3035815
+    },
+    {
+      "metric": "GT Burned Area %",
+      "sentinel2_optical": 21.222545614845505,
+      "sentinel1_sar": 21.236452066673344,
+      "difference_s2_minus_s1": -0.013906451827839561
+    },
+    {
+      "metric": "Pred Burned Area %",
+      "sentinel2_optical": 20.506708292547863,
+      "sentinel1_sar": 18.17415705266982,
+      "difference_s2_minus_s1": 2.3325512398780432
+    }
+  ],
+  "pixel_level_agreement": {
+    "counts": {
+      "both_correct_burned": 180839,
+      "both_correct_unburned": 17748,
+      "s2_only_correct": 345143,
+      "s1_only_correct": 39738,
+      "both_failed": 71892,
+      "total_compared_pixels": 655360
+    },
+    "percentages": {
+      "both_correct_burned": 27.59384155273438,
+      "both_correct_unburned": 2.7081298828125,
+      "s2_only_correct": 52.66464233398438,
+      "s1_only_correct": 6.06353759765625,
+      "both_failed": 10.9698486328125
+    }
+  },
+  "scientific_conclusions": {
+    "s2_optical_advantages": "Significantly higher IoU (74.05% vs 19.14%) and Dice (85.09% vs 32.13%) due to sharp SWIR-2/NIR spectral absorption by charred organic matter and vegetation loss.",
+    "s1_sar_advantages": "Operates independently of solar illumination and cloud/haze/smoke obscuration; provides surface roughness and volumetric structure cues.",
+    "s2_only_success_cases": "Clear contrast along sharp vegetative burn boundaries where optical SWIR contrast is high but structural roughness changes are subtle.",
+    "s1_only_success_cases": "Areas under thin cloud/shadow or sparse canopy burns where optical reflectance is partially obstructed but radar penetrates to charred stem structure.",
+    "shared_failure_cases": "Highly fractured sub-pixel burned fringes, small isolated tree stands, and steep shadowed topography where both radar layover/shadow and optical terrain shade obscure signatures.",
+    "multimodal_fusion_hypothesis": "Combining optical spectral bands with radar roughness channels in Stage 5 provides complementary information to resolve optical shadow/cloud ambiguities and constrain SAR backscatter ambiguity."
+  }
+}

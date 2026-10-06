@@ -1,0 +1,5 @@
+Severity Class,Pixels,Area (km2),S2_RGB_only (FPR %),S1_VV_only (FPR %),S1_VH_only (FPR %),S1_VV_VH (FPR %),S1_Full (FPR %),S2_RGB_only (Recall %),S1_VV_only (Recall %),S1_VH_only (Recall %),S1_VV_VH (Recall %),S1_Full (Recall %)
+Unburned (dNBR < 0.10),1697427,169.74,26.34,2.53,0.0,3.85,1.52,,,,,
+Low Severity (0.10 <= dNBR < 0.27),213638,21.36,,,,,,85.81,11.37,0.0,43.48,22.95
+Moderate Severity (0.27 <= dNBR < 0.66),447334,44.73,,,,,,98.61,15.73,0.0,59.95,29.82
+High Severity (dNBR >= 0.66),897,0.09,,,,,,99.44,16.95,0.0,45.48,10.7

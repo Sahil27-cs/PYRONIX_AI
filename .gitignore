@@ -1,0 +1,77 @@
+# Environment Variables & Secrets
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.env
+
+# Large Datasets & Processed Tiles (MUST NOT BE COMMITTED OR DEPLOYED)
+data/
+data/**
+dataset/
+sample_test_images/
+*.tif
+*.tiff
+*.npz
+*.npy
+*.h5
+*.hdf5
+
+# Machine Learning Checkpoints (1.3+ GB weights - Run locally or via MODEL_API_URL)
+models/*.pt
+models/*.pth
+models/*.ckpt
+models/checkpoints/
+models/checkpoints/**
+*.pt
+*.pth
+
+# Python Artifacts & Environments
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+ENV/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Node.js & Vercel
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+.vercel/
+
+# OS & Editor Files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Temporary Logs, Large Plots & Inspection Caches
+*.log
+results/visualizations/
+results/reports/*.png
+results/metrics/*cache.json
+results/metrics/*state.json
