@@ -123,15 +123,12 @@ def call_gemini_api(prompt_text: str, system_instruction: str) -> str:
         if m not in candidate_models:
             candidate_models.append(m)
 
+    full_prompt = f"[SYSTEM INSTRUCTION]\n{system_instruction}\n\n{prompt_text}"
     headers = {"Content-Type": "application/json"}
     payload = {
-        "systemInstruction": {
-            "parts": [{"text": system_instruction}]
-        },
         "contents": [
             {
-                "role": "user",
-                "parts": [{"text": prompt_text}]
+                "parts": [{"text": full_prompt}]
             }
         ],
         "generationConfig": {
@@ -143,53 +140,11 @@ def call_gemini_api(prompt_text: str, system_instruction: str) -> str:
     errors_map = {}
     for model_name in candidate_models:
         model_clean = model_name.replace("models/", "")
-        # 1. Try official google-genai SDK
-        client = get_gemini_client()
-        if client is not None:
-            try:
-                from google.genai import types
-                config = types.GenerateContentConfig(
-                    system_instruction=system_instruction,
-                    temperature=0.2,
-                    max_output_tokens=1024
-                )
-                response = client.models.generate_content(
-                    model=model_clean,
-                    contents=prompt_text,
-                    config=config
-                )
-                if response and response.text:
-                    _discovered_working_model = model_clean
-                    return response.text.strip()
-            except Exception as sdk_err:
-                # Try fallback for models that don't accept system_instruction config
-                try:
-                    alt_resp = client.models.generate_content(
-                        model=model_clean,
-                        contents=f"[SYSTEM INSTRUCTION: {system_instruction}]\n\n{prompt_text}"
-                    )
-                    if alt_resp and alt_resp.text:
-                        _discovered_working_model = model_clean
-                        return alt_resp.text.strip()
-                except Exception:
-                    pass
-                errors_map[f"{model_clean}_sdk"] = f"{type(sdk_err).__name__}: {str(sdk_err)[:80]}"
-                logger.warning(f"google-genai SDK failed for {model_clean}: {sdk_err}")
 
-        # 2. Resilient official REST API
+        # 1. Official REST API with direct HTTP (Fastest and zero hanging in serverless)
         url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_clean}:generateContent?key={key}"
         try:
             r = requests.post(url, headers=headers, json=payload, timeout=6)
-            # If systemInstruction was rejected by older/gemma models, retry with combined text
-            if r.status_code == 400 and ("systemInstruction" in r.text or "not supported" in r.text):
-                alt_payload = {
-                    "contents": [
-                        {"role": "user", "parts": [{"text": f"[SYSTEM: {system_instruction}]\n\n{prompt_text}"}]}
-                    ],
-                    "generationConfig": {"temperature": 0.2, "maxOutputTokens": 1024}
-                }
-                r = requests.post(url, headers=headers, json=alt_payload, timeout=6)
-
             if r.status_code == 200:
                 out = r.json()
                 candidates = out.get("candidates", [])
@@ -209,11 +164,26 @@ def call_gemini_api(prompt_text: str, system_instruction: str) -> str:
                 errors_map[f"{model_clean}_rest"] = f"HTTP {r.status_code}: {r.text[:80]}"
                 continue
         except requests.exceptions.Timeout:
-            errors_map[f"{model_clean}_rest"] = "Timeout"
+            errors_map[f"{model_clean}_rest"] = "Timeout (6s)"
             continue
         except requests.exceptions.RequestException as re:
             errors_map[f"{model_clean}_rest"] = f"ReqErr: {str(re)[:80]}"
             continue
+
+        # 2. Official google-genai SDK fallback
+        client = get_gemini_client()
+        if client is not None:
+            try:
+                response = client.models.generate_content(
+                    model=model_clean,
+                    contents=full_prompt
+                )
+                if response and response.text:
+                    _discovered_working_model = model_clean
+                    return response.text.strip()
+            except Exception as sdk_err:
+                errors_map[f"{model_clean}_sdk"] = f"{type(sdk_err).__name__}: {str(sdk_err)[:80]}"
+                logger.warning(f"google-genai SDK fallback failed for {model_clean}: {sdk_err}")
 
     # If all models returned quota/rate limit
     all_429 = all("rate" in str(v).lower() or "quota" in str(v).lower() for v in errors_map.values()) if errors_map else False
