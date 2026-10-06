@@ -500,39 +500,40 @@
             <!-- Right Column: Pyronix AI Tactical Chatbot & SitRep -->
             <aside class="intel-panel">
                 
-                <!-- Tactical Officer Chat Assistant -->
+                <!-- Tactical Officer / Gemini Chat Assistant -->
                 <div class="panel-card chat-card">
                     <div class="card-header">
                         <div class="header-title-group">
                             <span class="section-tag">AI INCIDENT ADVISOR</span>
-                            <h2 class="card-title">Pyronix Tactical Officer</h2>
+                            <h2 class="card-title" id="chat-header-title">Pyronix AI Assistant</h2>
                         </div>
-                        <span class="status-online"><span class="pulse-dot"></span> LIVE</span>
+                        <span class="status-checking" id="chat-status-badge"><span class="pulse-dot"></span> GEMINI CONNECTING...</span>
                     </div>
 
                     <!-- Chat conversation container -->
                     <div class="chat-thread" id="chat-thread">
-                        <div class="chat-message msg-system">
+                        <div class="chat-message msg-system" id="chat-greeting-msg">
                             <div class="msg-avatar bot-avatar">AI</div>
                             <div class="msg-bubble">
-                                <p class="bot-greeting"><strong>Pyronix Tactical Officer online.</strong></p>
-                                <p>Autonomous satellite sensor arbitration and deep segmentation models are loaded. Select a wildfire target preset or upload imagery to initiate real-time tactical intelligence.</p>
+                                <p class="bot-greeting" id="chat-greeting-heading"><strong>Pyronix AI Assistant</strong></p>
+                                <p id="chat-greeting-body">Verifying server-side Gemini intelligence connection...</p>
                             </div>
                         </div>
                     </div>
 
                     <!-- Suggested Prompts Chips -->
                     <div class="prompt-chips" id="prompt-chips">
-                        <button class="chip-btn" data-query="What is the total burned area and scene coverage?">Burned Acreage</button>
-                        <button class="chip-btn" data-query="Explain the debris flow and mudslide hazard.">Debris Flow</button>
-                        <button class="chip-btn" data-query="Why was this sensor arbitration mode selected?">Sensor Choice</button>
-                        <button class="chip-btn" data-query="What are the emergency BAER and tactical recommendations?">Prescriptions</button>
-                        <button class="chip-btn" data-query="Give me a Copernicus EMS damage grade breakdown.">Severity Tiers</button>
+                        <button class="chip-btn" data-query="Explain the burned area percentage and affected extent.">Explain Burned Area</button>
+                        <button class="chip-btn" data-query="What satellite sensor and bands were used for this analysis?">Sensor Used</button>
+                        <button class="chip-btn" data-query="How confident is the model in its burned-area delineation?">Model Confidence</button>
+                        <button class="chip-btn" data-query="Is ground truth available for this scene, and what are the validation metrics?">Ground Truth & IoU</button>
+                        <button class="chip-btn" data-query="Explain the ResNet-34 U-Net segmentation methodology and probability map.">Explain Segmentation</button>
+                        <button class="chip-btn" data-query="What does the burned-area probability map represent?">Probability Map</button>
                     </div>
 
                     <!-- Input Form -->
                     <form id="chat-form" class="chat-input-bar">
-                        <input type="text" id="chat-input" class="chat-text-input" placeholder="Ask tactical questions about the wildfire..." autocomplete="off">
+                        <input type="text" id="chat-input" class="chat-text-input" placeholder="Ask questions about the satellite wildfire analysis..." autocomplete="off">
                         <button type="submit" class="btn-chat-send" id="btn-send-chat" aria-label="Send Query">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
                         </button>

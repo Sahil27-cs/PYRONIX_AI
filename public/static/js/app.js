@@ -549,8 +549,48 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     });
 
+    async function checkChatbotHealth() {
+        const badge = document.getElementById("chat-status-badge");
+        const greetingHeading = document.getElementById("chat-greeting-heading");
+        const greetingBody = document.getElementById("chat-greeting-body");
+
+        try {
+            const res = await fetch("/api/chat/health");
+            if (!res.ok) throw new Error("Health check unreachable");
+            const data = await res.json();
+
+            if (data.configured && data.status === "ok") {
+                if (badge) {
+                    badge.className = "status-online";
+                    badge.innerHTML = `<span class="pulse-dot"></span> GEMINI CONNECTED`;
+                }
+                if (greetingHeading) greetingHeading.innerHTML = `<strong>Pyronix AI Assistant (${data.model || "Gemini"})</strong>`;
+                if (greetingBody) greetingBody.textContent = "Gemini AI assistant connected. Ask about the current satellite analysis, model output, or wildfire methodology.";
+            } else {
+                if (badge) {
+                    badge.className = "status-offline";
+                    badge.innerHTML = `GEMINI OFFLINE`;
+                }
+                if (greetingHeading) greetingHeading.innerHTML = `<strong>AI Assistant Unavailable</strong>`;
+                if (greetingBody) greetingBody.textContent = "AI assistant is temporarily unavailable. GEMINI_API_KEY is not configured.";
+            }
+        } catch (err) {
+            if (badge) {
+                badge.className = "status-offline";
+                badge.innerHTML = `GEMINI OFFLINE`;
+            }
+            if (greetingHeading) greetingHeading.innerHTML = `<strong>AI Assistant Offline</strong>`;
+            if (greetingBody) greetingBody.textContent = "AI assistant is temporarily unavailable.";
+        }
+    }
+
     async function sendChatQuery(query) {
-        // Append thinking placeholder
+        if (!query || query.length === 0) return;
+        if (query.length > 1000) {
+            showToast("Query exceeds maximum allowed limit of 1000 characters.", "error");
+            return;
+        }
+
         const placeholderId = "msg-thinking-" + Date.now();
         appendThinkingMessage(placeholderId);
 
@@ -563,14 +603,18 @@ document.addEventListener("DOMContentLoaded", () => {
                 body: formData
             });
 
-            if (!res.ok) throw new Error("Chat query failed");
-            const data = await res.json();
+            if (!res.ok) {
+                const errData = await res.json().catch(() => ({}));
+                throw new Error(errData.detail || `Server returned code ${res.status}`);
+            }
 
+            const data = await res.json();
             removeThinkingMessage(placeholderId);
-            appendBotMessage(data.reply, data.sources);
+            appendBotMessage(data.reply, data.sources || ["Gemini AI Assistant"]);
         } catch (err) {
             removeThinkingMessage(placeholderId);
-            appendBotMessage(`**Error:** Unable to process query (${err.message}). Make sure a wildfire incident is active.`);
+            appendBotMessage(`**Notice:** ${err.message}`);
+            showToast(`Chat error: ${err.message}`, "error");
         }
     }
 
@@ -594,7 +638,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (sources && sources.length > 0) {
             sourcesHtml = `
                 <div class="bot-sources-row">
-                    <span class="sources-label">AGENTS:</span>
+                    <span class="sources-label">SOURCES:</span>
                     ${sources.map(s => `<span class="source-tag">${s}</span>`).join(" ")}
                 </div>
             `;
@@ -617,7 +661,7 @@ document.addEventListener("DOMContentLoaded", () => {
         msgDiv.className = "chat-message msg-system";
         msgDiv.innerHTML = `
             <div class="msg-avatar bot-avatar">AI</div>
-            <div class="msg-bubble"><p><em>Querying multi-agent knowledge graph...</em></p></div>
+            <div class="msg-bubble"><p><em>Analyzing multi-agent satellite telemetry with Gemini...</em></p></div>
         `;
         chatThread.appendChild(msgDiv);
         scrollChatToBottom();
@@ -733,6 +777,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // 7. INITIAL BOOTSTRAP
     // =========================================================================
     fetchSystemStatus();
+    checkChatbotHealth();
 
     // Auto-load Pacific Palisades default analysis so user immediately sees rich telemetry
     setTimeout(() => {
