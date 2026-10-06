@@ -40,7 +40,7 @@ app.add_middleware(
 MODEL_API_URL = os.environ.get("MODEL_API_URL", "").rstrip("/")
 MODEL_API_KEY = os.environ.get("MODEL_API_KEY", "")
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "").strip()
-GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-2.5-flash").strip() or "gemini-2.5-flash"
+GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-3.8-flash").strip() or "gemini-3.8-flash"
 
 # System Prompt for Gemini (Scientific, Strictly Truthful, Non-Fabricating)
 SYSTEM_INSTRUCTION = (
@@ -102,12 +102,20 @@ def call_gemini_api(prompt_text: str, system_instruction: str) -> str:
             detail="Gemini AI assistant is not configured. Please set GEMINI_API_KEY in server environment variables."
         )
 
-    # Documented, supported Gemini models with priority
+    # Documented, supported Gemini models with priority for this account
     candidate_models = []
     custom_model = os.environ.get("GEMINI_MODEL", "").strip()
     if custom_model:
         candidate_models.append(custom_model)
-    for m in ["gemini-2.5-flash", "gemini-2.5-pro", "gemini-1.5-flash"]:
+    for m in [
+        "gemini-3.8-flash",
+        "gemini-flash-latest",
+        "gemini-3.5-flash",
+        "gemini-3.7-flash",
+        "gemini-2.5-flash-lite",
+        "gemini-3.1-pro-preview",
+        "gemma-4-26b-a4b-it"
+    ]:
         if m not in candidate_models:
             candidate_models.append(m)
 
@@ -152,6 +160,16 @@ def call_gemini_api(prompt_text: str, system_instruction: str) -> str:
                 err_str = str(sdk_err).lower()
                 if "429" in err_str or "quota" in err_str or "rate limit" in err_str:
                     raise HTTPException(status_code=429, detail="AI request limit reached. Please try again later.")
+                # Try fallback for models that don't accept system_instruction config
+                try:
+                    alt_resp = client.models.generate_content(
+                        model=model_clean,
+                        contents=f"[SYSTEM INSTRUCTION: {system_instruction}]\n\n{prompt_text}"
+                    )
+                    if alt_resp and alt_resp.text:
+                        return alt_resp.text.strip()
+                except Exception:
+                    pass
                 errors_map[f"{model_clean}_sdk"] = f"{type(sdk_err).__name__}: {str(sdk_err)[:100]}"
                 logger.warning(f"google-genai SDK failed for {model_clean}: {sdk_err}")
 
@@ -159,6 +177,16 @@ def call_gemini_api(prompt_text: str, system_instruction: str) -> str:
         url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_clean}:generateContent?key={key}"
         try:
             r = requests.post(url, headers=headers, json=payload, timeout=14)
+            # If systemInstruction was rejected by older/gemma models, retry with combined text
+            if r.status_code == 400 and ("systemInstruction" in r.text or "not supported" in r.text):
+                alt_payload = {
+                    "contents": [
+                        {"role": "user", "parts": [{"text": f"[SYSTEM: {system_instruction}]\n\n{prompt_text}"}]}
+                    ],
+                    "generationConfig": {"temperature": 0.2, "maxOutputTokens": 1024}
+                }
+                r = requests.post(url, headers=headers, json=alt_payload, timeout=14)
+
             if r.status_code == 200:
                 out = r.json()
                 candidates = out.get("candidates", [])
@@ -722,7 +750,7 @@ async def get_chat_health():
         "provider": "gemini",
         "configured": True,
         "working_model": working_model,
-        "model": working_model or os.environ.get("GEMINI_MODEL", "gemini-2.5-flash").strip(),
+        "model": working_model or os.environ.get("GEMINI_MODEL", "gemini-3.8-flash").strip(),
         "all_supported_models": models_available,
         "diagnostic": diagnostic
     }
