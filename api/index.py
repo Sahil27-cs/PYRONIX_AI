@@ -75,6 +75,7 @@ SYSTEM_INSTRUCTION = (
 
 # Lazy Google GenAI Client
 _gemini_client = None
+_discovered_working_model = "gemma-4-26b-a4b-it"
 
 def get_gemini_client():
     """Initializes and caches official Google GenAI Python client."""
@@ -102,19 +103,22 @@ def call_gemini_api(prompt_text: str, system_instruction: str) -> str:
             detail="Gemini AI assistant is not configured. Please set GEMINI_API_KEY in server environment variables."
         )
 
-    # Documented, supported Gemini models with priority for this account
+    # Documented, supported models with priority for this account
+    global _discovered_working_model
     candidate_models = []
     custom_model = os.environ.get("GEMINI_MODEL", "").strip()
     if custom_model:
         candidate_models.append(custom_model)
+    if _discovered_working_model and _discovered_working_model not in candidate_models:
+        candidate_models.append(_discovered_working_model)
     for m in [
-        "gemini-3.8-flash",
+        "gemma-4-26b-a4b-it",
         "gemini-flash-latest",
-        "gemini-3.5-flash",
-        "gemini-3.7-flash",
         "gemini-2.5-flash-lite",
-        "gemini-3.1-pro-preview",
-        "gemma-4-26b-a4b-it"
+        "gemini-3.8-flash",
+        "gemini-3.5-flash",
+        "gemma-4-31b-it",
+        "gemini-3.7-flash"
     ]:
         if m not in candidate_models:
             candidate_models.append(m)
@@ -155,11 +159,9 @@ def call_gemini_api(prompt_text: str, system_instruction: str) -> str:
                     config=config
                 )
                 if response and response.text:
+                    _discovered_working_model = model_clean
                     return response.text.strip()
             except Exception as sdk_err:
-                err_str = str(sdk_err).lower()
-                if "429" in err_str or "quota" in err_str or "rate limit" in err_str:
-                    raise HTTPException(status_code=429, detail="AI request limit reached. Please try again later.")
                 # Try fallback for models that don't accept system_instruction config
                 try:
                     alt_resp = client.models.generate_content(
@@ -167,16 +169,17 @@ def call_gemini_api(prompt_text: str, system_instruction: str) -> str:
                         contents=f"[SYSTEM INSTRUCTION: {system_instruction}]\n\n{prompt_text}"
                     )
                     if alt_resp and alt_resp.text:
+                        _discovered_working_model = model_clean
                         return alt_resp.text.strip()
                 except Exception:
                     pass
-                errors_map[f"{model_clean}_sdk"] = f"{type(sdk_err).__name__}: {str(sdk_err)[:100]}"
+                errors_map[f"{model_clean}_sdk"] = f"{type(sdk_err).__name__}: {str(sdk_err)[:80]}"
                 logger.warning(f"google-genai SDK failed for {model_clean}: {sdk_err}")
 
         # 2. Resilient official REST API
         url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_clean}:generateContent?key={key}"
         try:
-            r = requests.post(url, headers=headers, json=payload, timeout=14)
+            r = requests.post(url, headers=headers, json=payload, timeout=6)
             # If systemInstruction was rejected by older/gemma models, retry with combined text
             if r.status_code == 400 and ("systemInstruction" in r.text or "not supported" in r.text):
                 alt_payload = {
@@ -185,7 +188,7 @@ def call_gemini_api(prompt_text: str, system_instruction: str) -> str:
                     ],
                     "generationConfig": {"temperature": 0.2, "maxOutputTokens": 1024}
                 }
-                r = requests.post(url, headers=headers, json=alt_payload, timeout=14)
+                r = requests.post(url, headers=headers, json=alt_payload, timeout=6)
 
             if r.status_code == 200:
                 out = r.json()
@@ -193,19 +196,29 @@ def call_gemini_api(prompt_text: str, system_instruction: str) -> str:
                 if candidates:
                     parts = candidates[0].get("content", {}).get("parts", [])
                     if parts:
+                        _discovered_working_model = model_clean
                         return parts[0].get("text", "").strip()
                 errors_map[f"{model_clean}_rest"] = "Malformed response"
             elif r.status_code == 429:
-                raise HTTPException(status_code=429, detail="AI request limit reached. Please try again later.")
+                errors_map[f"{model_clean}_rest"] = "Rate/Quota limit"
+                continue
             elif r.status_code == 403:
-                raise HTTPException(status_code=403, detail="Gemini authentication failed. Please verify GEMINI_API_KEY permissions.")
+                errors_map[f"{model_clean}_rest"] = "Auth failed (403)"
+                continue
             else:
-                errors_map[f"{model_clean}_rest"] = f"HTTP {r.status_code}: {r.text[:120]}"
+                errors_map[f"{model_clean}_rest"] = f"HTTP {r.status_code}: {r.text[:80]}"
+                continue
         except requests.exceptions.Timeout:
-            raise HTTPException(status_code=504, detail="Gemini request timed out. Please try again.")
+            errors_map[f"{model_clean}_rest"] = "Timeout"
+            continue
         except requests.exceptions.RequestException as re:
             errors_map[f"{model_clean}_rest"] = f"ReqErr: {str(re)[:80]}"
+            continue
 
+    # If all models returned quota/rate limit
+    all_429 = all("rate" in str(v).lower() or "quota" in str(v).lower() for v in errors_map.values()) if errors_map else False
+    if all_429:
+        raise HTTPException(status_code=429, detail="AI request limit reached. Please try again later.")
     raise HTTPException(status_code=502, detail=f"Gemini is temporarily unavailable. ({errors_map})")
 
 
@@ -744,6 +757,10 @@ async def get_chat_health():
                 diagnostic[f"model_{m_name}"] = f"HTTP {r_test.status_code}: {r_test.text[:200]}"
         except Exception as e:
             diagnostic[f"model_{m_name}"] = f"FAIL: {str(e)[:100]}"
+
+    global _discovered_working_model
+    if working_model:
+        _discovered_working_model = working_model
 
     return {
         "status": "ok",
