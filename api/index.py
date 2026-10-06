@@ -113,11 +113,12 @@ def call_gemini_api(prompt_text: str, system_instruction: str) -> str:
 
     headers = {"Content-Type": "application/json"}
     payload = {
-        "system_instruction": {
+        "systemInstruction": {
             "parts": [{"text": system_instruction}]
         },
         "contents": [
             {
+                "role": "user",
                 "parts": [{"text": prompt_text}]
             }
         ],
@@ -127,7 +128,7 @@ def call_gemini_api(prompt_text: str, system_instruction: str) -> str:
         }
     }
 
-    last_error = None
+    errors_map = {}
     for model_name in candidate_models:
         model_clean = model_name.replace("models/", "")
         # 1. Try official google-genai SDK
@@ -151,6 +152,7 @@ def call_gemini_api(prompt_text: str, system_instruction: str) -> str:
                 err_str = str(sdk_err).lower()
                 if "429" in err_str or "quota" in err_str or "rate limit" in err_str:
                     raise HTTPException(status_code=429, detail="AI request limit reached. Please try again later.")
+                errors_map[f"{model_clean}_sdk"] = f"{type(sdk_err).__name__}: {str(sdk_err)[:100]}"
                 logger.warning(f"google-genai SDK failed for {model_clean}: {sdk_err}")
 
         # 2. Resilient official REST API
@@ -164,24 +166,19 @@ def call_gemini_api(prompt_text: str, system_instruction: str) -> str:
                     parts = candidates[0].get("content", {}).get("parts", [])
                     if parts:
                         return parts[0].get("text", "").strip()
-                raise HTTPException(status_code=502, detail="Malformed Gemini response.")
+                errors_map[f"{model_clean}_rest"] = "Malformed response"
             elif r.status_code == 429:
                 raise HTTPException(status_code=429, detail="AI request limit reached. Please try again later.")
             elif r.status_code == 403:
                 raise HTTPException(status_code=403, detail="Gemini authentication failed. Please verify GEMINI_API_KEY permissions.")
-            elif r.status_code == 404:
-                last_error = f"Model {model_name} HTTP 404: {r.text[:200]}"
-                continue
             else:
-                last_error = f"Gemini returned status {r.status_code}: {r.text[:200]}"
-                continue
+                errors_map[f"{model_clean}_rest"] = f"HTTP {r.status_code}: {r.text[:120]}"
         except requests.exceptions.Timeout:
             raise HTTPException(status_code=504, detail="Gemini request timed out. Please try again.")
         except requests.exceptions.RequestException as re:
-            last_error = f"Request error: {str(re)}"
-            continue
+            errors_map[f"{model_clean}_rest"] = f"ReqErr: {str(re)[:80]}"
 
-    raise HTTPException(status_code=502, detail=f"Gemini is temporarily unavailable. ({last_error})")
+    raise HTTPException(status_code=502, detail=f"Gemini is temporarily unavailable. ({errors_map})")
 
 
 # Load precomputed benchmarks for presets
@@ -697,12 +694,43 @@ async def get_chat_health():
     except Exception as e:
         models_available = [str(e)]
 
+    diagnostic = {}
+    # 1. Probe SDK
+    try:
+        from google import genai
+        from google.genai import types
+        c = genai.Client(api_key=key)
+        resp = c.models.generate_content(
+            model="gemini-2.5-flash",
+            contents="Say PONG",
+            config=types.GenerateContentConfig(temperature=0.0, max_output_tokens=10)
+        )
+        diagnostic["sdk_test"] = f"OK: {resp.text.strip() if resp else 'None'}"
+    except Exception as e:
+        diagnostic["sdk_test"] = f"FAIL: {type(e).__name__}: {str(e)[:120]}"
+
+    # 2. Probe REST
+    try:
+        rest_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={key}"
+        rest_payload = {
+            "contents": [{"parts": [{"text": "Say PONG"}]}],
+            "generationConfig": {"temperature": 0.0, "maxOutputTokens": 10}
+        }
+        r_test = requests.post(rest_url, json=rest_payload, headers={"Content-Type": "application/json"}, timeout=5)
+        if r_test.status_code == 200:
+            diagnostic["rest_test"] = f"OK: {r_test.json()['candidates'][0]['content']['parts'][0]['text'].strip()}"
+        else:
+            diagnostic["rest_test"] = f"HTTP {r_test.status_code}: {r_test.text[:120]}"
+    except Exception as e:
+        diagnostic["rest_test"] = f"FAIL: {str(e)[:120]}"
+
     return {
         "status": "ok",
         "provider": "gemini",
         "configured": True,
         "model": os.environ.get("GEMINI_MODEL", "gemini-2.5-flash").strip() or "gemini-2.5-flash",
-        "supported_models": models_available[:5]
+        "supported_models": models_available[:5],
+        "diagnostic": diagnostic
     }
 
 
