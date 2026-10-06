@@ -372,7 +372,7 @@ async def get_chat_health():
         "status": "ok",
         "provider": "gemini",
         "configured": True,
-        "model": os.environ.get("GEMINI_MODEL", "gemini-2.5-flash").strip() or "gemini-2.5-flash"
+        "model": os.environ.get("GEMINI_MODEL", "gemini-1.5-flash").strip() or "gemini-1.5-flash"
     }
 
 @app.post("/api/chat")

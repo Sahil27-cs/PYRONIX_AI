@@ -40,7 +40,7 @@ app.add_middleware(
 MODEL_API_URL = os.environ.get("MODEL_API_URL", "").rstrip("/")
 MODEL_API_KEY = os.environ.get("MODEL_API_KEY", "")
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "").strip()
-GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-2.5-flash").strip() or "gemini-2.5-flash"
+GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-1.5-flash").strip() or "gemini-1.5-flash"
 
 # System Prompt for Gemini (Scientific, Strictly Truthful, Non-Fabricating)
 SYSTEM_INSTRUCTION = (
@@ -94,7 +94,7 @@ def get_gemini_client():
 
 
 def call_gemini_api(prompt_text: str, system_instruction: str) -> str:
-    """Executes server-side Gemini request via official SDK with resilient REST fallback."""
+    """Executes server-side Gemini request via official SDK or REST with candidate fallback."""
     key = os.environ.get("GEMINI_API_KEY", "").strip()
     if not key:
         raise HTTPException(
@@ -102,32 +102,15 @@ def call_gemini_api(prompt_text: str, system_instruction: str) -> str:
             detail="Gemini AI assistant is not configured. Please set GEMINI_API_KEY in server environment variables."
         )
 
-    model_name = os.environ.get("GEMINI_MODEL", "gemini-2.5-flash").strip() or "gemini-2.5-flash"
+    # Documented, supported Gemini models with priority
+    candidate_models = []
+    custom_model = os.environ.get("GEMINI_MODEL", "").strip()
+    if custom_model:
+        candidate_models.append(custom_model)
+    for m in ["gemini-1.5-flash", "gemini-2.0-flash", "gemini-1.5-pro"]:
+        if m not in candidate_models:
+            candidate_models.append(m)
 
-    # 1. Official google-genai SDK
-    client = get_gemini_client()
-    if client is not None:
-        try:
-            from google.genai import types
-            config = types.GenerateContentConfig(
-                system_instruction=system_instruction,
-                temperature=0.2,
-                max_output_tokens=1024
-            )
-            response = client.models.generate_content(
-                model=model_name,
-                contents=prompt_text,
-                config=config
-            )
-            if response and response.text:
-                return response.text.strip()
-        except Exception as sdk_err:
-            err_str = str(sdk_err).lower()
-            if "429" in err_str or "quota" in err_str or "rate limit" in err_str:
-                raise HTTPException(status_code=429, detail="AI request limit reached. Please try again later.")
-            logger.warning(f"google-genai SDK call failed, falling back to REST: {sdk_err}")
-
-    # 2. Resilient official REST API fallback
     headers = {"Content-Type": "application/json"}
     payload = {
         "system_instruction": {
@@ -143,29 +126,62 @@ def call_gemini_api(prompt_text: str, system_instruction: str) -> str:
             "maxOutputTokens": 1024
         }
     }
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={key}"
-    try:
-        r = requests.post(url, headers=headers, json=payload, timeout=12)
-        if r.status_code == 200:
-            out = r.json()
-            candidates = out.get("candidates", [])
-            if candidates:
-                parts = candidates[0].get("content", {}).get("parts", [])
-                if parts:
-                    return parts[0].get("text", "").strip()
-            raise HTTPException(status_code=502, detail="Malformed Gemini response.")
-        elif r.status_code == 429:
-            raise HTTPException(status_code=429, detail="AI request limit reached. Please try again later.")
-        elif r.status_code == 400:
-            raise HTTPException(status_code=400, detail="Gemini request was rejected. Please check your query.")
-        elif r.status_code == 403:
-            raise HTTPException(status_code=403, detail="Gemini authentication failed. Please verify GEMINI_API_KEY permissions.")
-        else:
-            raise HTTPException(status_code=r.status_code, detail="Gemini is temporarily unavailable. Please try again.")
-    except requests.exceptions.Timeout:
-        raise HTTPException(status_code=504, detail="Gemini request timed out. Please try again.")
-    except requests.exceptions.RequestException:
-        raise HTTPException(status_code=502, detail="Unable to contact Gemini AI service.")
+
+    last_error = None
+    for model_name in candidate_models:
+        # 1. Try official google-genai SDK
+        client = get_gemini_client()
+        if client is not None:
+            try:
+                from google.genai import types
+                config = types.GenerateContentConfig(
+                    system_instruction=system_instruction,
+                    temperature=0.2,
+                    max_output_tokens=1024
+                )
+                response = client.models.generate_content(
+                    model=model_name,
+                    contents=prompt_text,
+                    config=config
+                )
+                if response and response.text:
+                    return response.text.strip()
+            except Exception as sdk_err:
+                err_str = str(sdk_err).lower()
+                if "429" in err_str or "quota" in err_str or "rate limit" in err_str:
+                    raise HTTPException(status_code=429, detail="AI request limit reached. Please try again later.")
+                logger.warning(f"google-genai SDK failed for {model_name}: {sdk_err}")
+
+        # 2. Resilient official REST API
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={key}"
+        try:
+            r = requests.post(url, headers=headers, json=payload, timeout=14)
+            if r.status_code == 200:
+                out = r.json()
+                candidates = out.get("candidates", [])
+                if candidates:
+                    parts = candidates[0].get("content", {}).get("parts", [])
+                    if parts:
+                        return parts[0].get("text", "").strip()
+                raise HTTPException(status_code=502, detail="Malformed Gemini response.")
+            elif r.status_code == 429:
+                raise HTTPException(status_code=429, detail="AI request limit reached. Please try again later.")
+            elif r.status_code == 403:
+                raise HTTPException(status_code=403, detail="Gemini authentication failed. Please verify GEMINI_API_KEY permissions.")
+            elif r.status_code == 404:
+                # Try next candidate model
+                last_error = f"Model {model_name} not available."
+                continue
+            else:
+                last_error = f"Gemini returned status {r.status_code}."
+                continue
+        except requests.exceptions.Timeout:
+            raise HTTPException(status_code=504, detail="Gemini request timed out. Please try again.")
+        except requests.exceptions.RequestException as re:
+            last_error = str(re)
+            continue
+
+    raise HTTPException(status_code=502, detail=f"Gemini is temporarily unavailable. Please try again. ({last_error})")
 
 
 # Load precomputed benchmarks for presets
@@ -674,7 +690,7 @@ async def get_chat_health():
         "status": "ok",
         "provider": "gemini",
         "configured": True,
-        "model": os.environ.get("GEMINI_MODEL", "gemini-2.5-flash").strip() or "gemini-2.5-flash"
+        "model": os.environ.get("GEMINI_MODEL", "gemini-1.5-flash").strip() or "gemini-1.5-flash"
     }
 
 
