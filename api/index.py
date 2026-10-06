@@ -225,20 +225,38 @@ active_state = {
 }
 
 
-def build_structured_analysis_context() -> Optional[Dict[str, Any]]:
+def build_structured_analysis_context(preset_id: Optional[str] = None) -> Optional[Dict[str, Any]]:
     """Builds clean, non-fabricated structured context strictly reflecting the active scene."""
-    if not active_state.get("has_analyzed_incident") or not active_state.get("sitrep"):
+    sitrep = None
+    incident_name = None
+    metrics = None
+    gt_status = "Not Available"
+    model_used = None
+    threat_level = None
+
+    if active_state.get("has_analyzed_incident") and active_state.get("sitrep"):
+        sitrep = active_state.get("sitrep", {})
+        incident_name = active_state.get("incident_name", "Wildfire Incident")
+        metrics = active_state.get("metrics") or sitrep.get("metrics")
+        gt_status = active_state.get("ground_truth_status", "Not Available")
+        model_used = active_state.get("model_used")
+        threat_level = active_state.get("threat_level", "HIGH")
+    elif preset_id and preset_id in presets_meta:
+        p_data = presets_meta[preset_id]
+        sitrep = p_data.get("sitrep", {})
+        incident_name = p_data.get("incident_name", "Wildfire Incident")
+        metrics = p_data.get("metrics") or sitrep.get("metrics")
+        gt_status = p_data.get("ground_truth_status", "Available")
+        model_used = p_data.get("model_used") or sitrep.get("arbitration", {}).get("recommended_model")
+        threat_level = p_data.get("threat_level", sitrep.get("threat_level", "HIGH"))
+    else:
         return None
 
-    sitrep = active_state.get("sitrep", {})
-    incident_name = active_state.get("incident_name", "Wildfire Incident")
     delin = sitrep.get("delineation", {})
     sev = sitrep.get("severity", {})
     risk = sitrep.get("risk", {})
     arb = sitrep.get("arbitration", {})
-    metrics = active_state.get("metrics") or sitrep.get("metrics")
 
-    gt_status = active_state.get("ground_truth_status", "Not Available")
     gt_available = "available" in gt_status.lower()
 
     burned_pct = delin.get("burn_percentage")
@@ -261,7 +279,7 @@ def build_structured_analysis_context() -> Optional[Dict[str, Any]]:
             "resolution_m": sitrep.get("resolution_m", 10.0) if is_georef else None
         },
         "model": {
-            "name": active_state.get("model_used") or arb.get("recommended_model", "best_s2_baseline_model.pt"),
+            "name": model_used or arb.get("recommended_model", "best_s2_baseline_model.pt"),
             "architecture": "ResNet-34 U-Net",
             "threshold": 0.5
         },
@@ -272,12 +290,12 @@ def build_structured_analysis_context() -> Optional[Dict[str, Any]]:
             "burned_area_acres": sitrep.get("burned_area_acres"),
             "perimeter_km": sitrep.get("perimeter_km"),
             "confidence": delin.get("mean_burn_confidence", "High (Calibrated Sigmoid > 0.5)"),
-            "threat_level": active_state.get("threat_level", "HIGH")
+            "threat_level": threat_level or "HIGH"
         },
         "ground_truth": {
             "available": gt_available,
             "status": gt_status,
-            "validation_status": active_state.get("validation_status", "Verified" if gt_available else "Unverified"),
+            "validation_status": "Verified" if gt_available else "Unverified",
             "source": sitrep.get("ground_truth_source", "USGS dNBR / Copernicus EMS Grading" if gt_available else None)
         },
         "validation": {
@@ -746,21 +764,26 @@ async def get_chat_health():
 @app.post("/api/chat")
 async def chat_query(
     request: Request,
-    query: Optional[str] = Form(None)
+    query: Optional[str] = Form(None),
+    preset_id: Optional[str] = Form(None)
 ):
     """
     Server-side conversational incident assistant powered by Google Gemini.
     Accepts Form or JSON payloads.
     Provides structured analysis context to Gemini without fabricating results.
     """
-    # 1. Parse user query
+    # 1. Parse user query & optional preset_id
     user_query = None
+    req_preset_id = preset_id
+
     if query:
         user_query = query.strip()
     else:
         try:
             body = await request.json()
             user_query = (body.get("query") or body.get("message") or "").strip()
+            if not req_preset_id:
+                req_preset_id = body.get("preset_id")
         except Exception:
             pass
 
@@ -779,7 +802,7 @@ async def chat_query(
         )
 
     # 4. Build actual analysis context
-    context = build_structured_analysis_context()
+    context = build_structured_analysis_context(preset_id=req_preset_id)
 
     if context:
         context_json = json.dumps(context, indent=2)

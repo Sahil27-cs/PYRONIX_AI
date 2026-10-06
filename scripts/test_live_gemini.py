@@ -74,7 +74,7 @@ with urllib.request.urlopen(req) as resp:
 
 # [5] Test Analysis Context Query: "What is the burned area?"
 print("\n[TEST 5] POST /api/chat -> 'What is the burned area?'")
-form_payload = urllib.parse.urlencode({"query": "What is the burned area?"}).encode("utf-8")
+form_payload = urllib.parse.urlencode({"query": "What is the burned area?", "preset_id": "palisades"}).encode("utf-8")
 req = urllib.request.Request(
     f"{base_url}/api/chat",
     data=form_payload,
@@ -93,7 +93,7 @@ except urllib.error.HTTPError as e:
 
 # [6] Test Ground Truth Query: "What is the IoU?"
 print("\n[TEST 6] POST /api/chat -> 'What is the IoU?'")
-form_payload = urllib.parse.urlencode({"query": "What is the IoU?"}).encode("utf-8")
+form_payload = urllib.parse.urlencode({"query": "What is the IoU?", "preset_id": "palisades"}).encode("utf-8")
 req = urllib.request.Request(
     f"{base_url}/api/chat",
     data=form_payload,

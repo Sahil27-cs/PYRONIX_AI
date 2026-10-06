@@ -7,6 +7,8 @@ document.addEventListener("DOMContentLoaded", () => {
     // State management
     const state = {
         activePreset: "palisades",
+        hasAnalyzed: false,
+        analyzedPreset: null,
         currentPreviews: {},
         activeLayer: "probability_map",
         secondaryLayer: "optical_rgb",
@@ -278,6 +280,8 @@ document.addEventListener("DOMContentLoaded", () => {
     // 3. UI UPDATE & SITUATION HUD
     // =========================================================================
     function handleAnalysisResult(data) {
+        state.hasAnalyzed = true;
+        state.analyzedPreset = state.activePreset;
         state.lastAnalyzedIncident = data.incident_name;
         state.currentPreviews = data.previews || {};
         const sitrep = data.sitrep || {};
@@ -597,6 +601,9 @@ document.addEventListener("DOMContentLoaded", () => {
         try {
             const formData = new FormData();
             formData.append("query", query);
+            if (state.hasAnalyzed && state.analyzedPreset) {
+                formData.append("preset_id", state.analyzedPreset);
+            }
 
             const res = await fetch("/api/chat", {
                 method: "POST",
