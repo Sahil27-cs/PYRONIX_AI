@@ -685,11 +685,23 @@ async def get_chat_health():
             "message": "GEMINI_API_KEY is not configured in server environment variables."
         }
 
+    models_available = []
+    try:
+        r = requests.get(f"https://generativelanguage.googleapis.com/v1beta/models?key={key}", timeout=5)
+        if r.status_code == 200:
+            data = r.json()
+            models_available = [m.get("name") for m in data.get("models", []) if "generateContent" in m.get("supportedGenerationMethods", [])]
+        else:
+            models_available = [f"ERR_{r.status_code}_{r.text[:80]}"]
+    except Exception as e:
+        models_available = [str(e)]
+
     return {
         "status": "ok",
         "provider": "gemini",
         "configured": True,
-        "model": os.environ.get("GEMINI_MODEL", "gemini-1.5-flash").strip() or "gemini-1.5-flash"
+        "model": os.environ.get("GEMINI_MODEL", "gemini-1.5-flash").strip() or "gemini-1.5-flash",
+        "supported_models": models_available[:5]
     }
 
 
