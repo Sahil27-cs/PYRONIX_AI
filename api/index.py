@@ -502,7 +502,7 @@ async def analyze_upload(
     if not optical_file and not sar_file:
         raise HTTPException(status_code=400, detail="Please upload at least one satellite raster file (Optical or SAR).")
 
-    allowed_exts = {".tif", ".tiff", ".npz", ".npy", ".h5", ".hdf5"}
+    allowed_exts = {".tif", ".tiff", ".npz", ".npy", ".h5", ".hdf5", ".png", ".jpg", ".jpeg"}
     for f in [optical_file, sar_file]:
         if f:
             ext = os.path.splitext(f.filename.lower())[1]
@@ -554,19 +554,19 @@ async def analyze_upload(
             content = await optical_file.read()
             if optical_file.filename.lower().endswith((".npz", ".npy")):
                 npz = np.load(io.BytesIO(content))
-                raw_arr = npz["arr_0"] if "arr_0" in npz else next(iter(npz.values()))
+                raw_arr = npz["image"] if "image" in npz else (npz["arr_0"] if "arr_0" in npz else next(iter(npz.values())))
             else:
-                img = Image.open(io.BytesIO(content))
-                raw_arr = np.array(img)
+                img = Image.open(io.BytesIO(content)).convert("RGB")
+                raw_arr = np.array(img, dtype=np.float32)
 
         elif sar_file:
             content = await sar_file.read()
             if sar_file.filename.lower().endswith((".npz", ".npy")):
                 npz = np.load(io.BytesIO(content))
-                raw_arr = npz["arr_0"] if "arr_0" in npz else next(iter(npz.values()))
+                raw_arr = npz["image"] if "image" in npz else (npz["arr_0"] if "arr_0" in npz else next(iter(npz.values())))
             else:
-                img = Image.open(io.BytesIO(content))
-                raw_arr = np.array(img)
+                img = Image.open(io.BytesIO(content)).convert("L")
+                raw_arr = np.array(img, dtype=np.float32)
 
     except Exception:
         raise HTTPException(
@@ -579,6 +579,10 @@ async def analyze_upload(
             status_code=400,
             detail="Unsupported image format or satellite data structure."
         )
+
+    # Transpose channels-first (C, H, W) to (H, W, C) if needed
+    if raw_arr.ndim == 3 and raw_arr.shape[0] in (1, 2, 3, 4, 6, 12) and raw_arr.shape[2] not in (1, 2, 3, 4, 6, 12):
+        raw_arr = np.transpose(raw_arr, (1, 2, 0))
 
     # Process raster channels
     H, W = raw_arr.shape[:2]
@@ -599,12 +603,21 @@ async def analyze_upload(
         )
 
     # Compute radiometric probability mask
-    if raw_arr.ndim == 3 and channels >= 3:
-        nir = raw_arr[:, :, 3].astype(np.float32) if channels > 3 else raw_arr[:, :, 0].astype(np.float32)
-        swir = raw_arr[:, :, 2].astype(np.float32)
+    if raw_arr.ndim == 3 and channels >= 4:
+        # Multispectral: Band 3 NIR, Band 4 or 2 SWIR
+        nir = raw_arr[:, :, 3].astype(np.float32)
+        swir = raw_arr[:, :, 4].astype(np.float32) if channels >= 5 else raw_arr[:, :, 2].astype(np.float32)
         denom = (nir + swir) + 1e-6
         nbr = (nir - swir) / denom
         prob = np.clip((-nbr + 1.0) / 2.0, 0.0, 1.0)
+    elif raw_arr.ndim == 3 and channels == 3:
+        # Standard RGB: Red channel sensitivity to burn scar
+        r = raw_arr[:, :, 0].astype(np.float32)
+        g = raw_arr[:, :, 1].astype(np.float32)
+        b = raw_arr[:, :, 2].astype(np.float32)
+        # Burn scar has high Red/Green ratio, low Blue
+        burn_index = (r - g) / (r + g + 1e-6)
+        prob = np.clip((burn_index + 0.2) / 0.8, 0.0, 1.0)
     else:
         gray = raw_arr if raw_arr.ndim == 2 else raw_arr[:, :, 0]
         norm = (gray - np.min(gray)) / (np.max(gray) - np.min(gray) + 1e-6)
@@ -620,7 +633,15 @@ async def analyze_upload(
 
     prob_b64 = array_to_base64_png(prob, "fire")
     mask_b64 = array_to_base64_png(binary_mask, "mask")
-    rgb_slice = raw_arr[:, :, :3] if (raw_arr.ndim == 3 and channels >= 3) else np.repeat(prob[:, :, None], 3, axis=2)
+    if raw_arr.ndim == 3 and channels >= 3:
+        # If 6 bands, Red=2, Green=1, Blue=0
+        if channels == 6:
+            rgb_slice = np.stack([raw_arr[:, :, 2], raw_arr[:, :, 1], raw_arr[:, :, 0]], axis=2)
+        else:
+            rgb_slice = raw_arr[:, :, :3]
+    else:
+        rgb_slice = np.repeat(prob[:, :, None], 3, axis=2)
+
     rgb_norm = (rgb_slice - np.min(rgb_slice)) / (np.max(rgb_slice) - np.min(rgb_slice) + 1e-6)
     opt_b64 = array_to_base64_png(rgb_norm[:, :, 0], "gray")
 
