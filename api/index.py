@@ -64,19 +64,17 @@ SYSTEM_INSTRUCTION = (
 )
 
 PREFERRED_GEMINI_MODELS = [
+    "gemini-flash-lite-latest",
+    "gemini-3.5-flash-lite",
     "gemini-3.8-flash",
+    "gemini-3.5-flash",
     "gemini-flash-latest",
     "gemini-3.7-flash",
-    "gemini-3.5-flash",
-    "gemini-2.5-flash-lite",
-    "gemini-3.1-flash-lite",
-    "gemini-flash-lite-latest",
-    "gemini-3-flash-preview",
 ]
 
 # Lazy Google GenAI Client
 _gemini_client = None
-_discovered_working_model = "gemini-3.8-flash"
+_discovered_working_model = "gemini-flash-lite-latest"
 
 
 def clean_chat_response(text: str) -> str:
@@ -176,10 +174,10 @@ def call_gemini_api(prompt_text: str, system_instruction: str) -> str:
         # 1. Official REST API with direct HTTP (Fastest and zero hanging in serverless)
         url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_clean}:generateContent?key={key}"
         try:
-            r = requests.post(url, headers=headers, json=payload_system, timeout=14)
+            r = requests.post(url, headers=headers, json=payload_system, timeout=8)
             # If systemInstruction is rejected on older model architectures, retry with fallback payload
             if r.status_code == 400 and ("systemInstruction" in r.text or "not supported" in r.text):
-                r = requests.post(url, headers=headers, json=payload_fallback, timeout=14)
+                r = requests.post(url, headers=headers, json=payload_fallback, timeout=8)
 
             if r.status_code == 200:
                 out = r.json()
@@ -201,7 +199,7 @@ def call_gemini_api(prompt_text: str, system_instruction: str) -> str:
                 errors_map[f"{model_clean}_rest"] = f"HTTP {r.status_code}: {r.text[:80]}"
                 continue
         except requests.exceptions.Timeout:
-            errors_map[f"{model_clean}_rest"] = "Timeout (14s)"
+            errors_map[f"{model_clean}_rest"] = "Timeout (8s)"
             continue
         except requests.exceptions.RequestException as re:
             errors_map[f"{model_clean}_rest"] = f"ReqErr: {str(re)[:80]}"
