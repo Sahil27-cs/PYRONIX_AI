@@ -7,6 +7,7 @@ System: Satellite Wildfire AI System
 import os
 import sys
 import io
+import re
 import time
 import json
 import base64
