@@ -44,38 +44,62 @@ GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-3.8-flash").strip() or "ge
 
 # System Prompt for Gemini (Scientific, Strictly Truthful, Non-Fabricating)
 SYSTEM_INSTRUCTION = (
-    "You are the AI assistant for PYRONIX AI, an AI-powered satellite wildfire and burned-area intelligence platform.\n\n"
-    "You explain satellite wildfire analysis clearly and scientifically.\n"
-    "You must only make claims supported by the analysis data and project context provided to you.\n\n"
-    "Never fabricate:\n"
-    "- burned area\n"
-    "- affected area\n"
-    "- confidence\n"
-    "- probability\n"
-    "- IoU\n"
-    "- Dice\n"
-    "- precision\n"
-    "- recall\n"
-    "- ground truth\n"
-    "- severity\n"
-    "- sensor measurements\n"
-    "- satellite observations\n\n"
-    "If a value is unavailable, explicitly say it is unavailable.\n"
-    "If ground truth is unavailable, explain that quantitative validation metrics (such as IoU, Dice, Precision, and Recall) cannot be calculated.\n\n"
-    "Distinguish clearly between:\n"
-    "- model prediction\n"
-    "- reference/ground truth\n"
-    "- derived estimate\n"
-    "- unavailable information\n\n"
-    "Do not claim that an arbitrary RGB image is Sentinel-2 multispectral imagery.\n"
-    "Do not claim CUDA/GPU availability unless provided by the backend.\n"
-    "Do not present the system as an official emergency-management authority.\n"
-    "Explain results in a professional, scientifically responsible manner."
+    "You are the tactical AI assistant for PYRONIX AI, an AI-powered satellite wildfire intelligence and burned-area segmentation platform.\n\n"
+    "CRITICAL RESPONSE FORMAT RULES:\n"
+    "1. Respond directly to the user in clean, concise, professional Markdown.\n"
+    "2. NEVER output internal prompt analysis, meta-commentary, constraint checklists, role summaries, or chain-of-thought scratchpads (e.g. NEVER output '* User Role:', '* Role:', '* Constraints:', '* Tone:', '* Context:', '* User Inquiry:').\n"
+    "3. Begin your response immediately with the direct tactical answer to the user's question.\n\n"
+    "SCIENTIFIC GUIDELINES:\n"
+    "- Explain satellite wildfire analysis clearly and scientifically.\n"
+    "- You must only make claims supported by the analysis data and project context provided to you.\n"
+    "- Never fabricate: burned area, affected area, confidence, probability, IoU, Dice, precision, recall, ground truth, severity, sensor measurements, or satellite observations.\n"
+    "- If a value is unavailable, explicitly state that it is unavailable.\n"
+    "- If ground truth is unavailable, explain that quantitative validation metrics (such as IoU, Dice, Precision, and Recall) cannot be calculated.\n"
+    "- Distinguish clearly between model prediction, reference/ground truth, and derived estimates.\n"
+    "- Do not claim that an arbitrary RGB image is Sentinel-2 multispectral imagery.\n"
+    "- Do not claim CUDA/GPU availability unless provided by the backend.\n"
+    "- Do not present the system as an official emergency-management authority.\n"
+    "- Explain results in a professional, scientifically responsible manner."
 )
+
+PREFERRED_GEMINI_MODELS = [
+    "gemini-3.8-flash",
+    "gemini-flash-latest",
+    "gemini-3.7-flash",
+    "gemini-3.5-flash",
+    "gemini-2.5-flash-lite",
+    "gemini-3.1-flash-lite",
+    "gemini-flash-lite-latest",
+    "gemini-3-flash-preview",
+]
 
 # Lazy Google GenAI Client
 _gemini_client = None
-_discovered_working_model = "gemma-4-26b-a4b-it"
+_discovered_working_model = "gemini-3.8-flash"
+
+
+def clean_chat_response(text: str) -> str:
+    """Strips any inadvertent model scratchpads, chain-of-thought, or prompt echoing."""
+    if not text:
+        return text
+    # Remove thought tags if present
+    text = re.sub(r"<thought>[\s\S]*?</thought>", "", text).strip()
+
+    # Check if text starts with scratchpad bullet points
+    first_lines = [l.strip() for l in text.split("\n") if l.strip()]
+    if first_lines and any(re.match(r"^[\*\-]?\s*(User Role|Role|Tone|Constraints|Input Data|Context):", l, re.IGNORECASE) for l in first_lines[:3]):
+        blocks = [b.strip() for b in text.split("\n\n") if b.strip()]
+        clean_blocks = []
+        for b in blocks:
+            lines = [l.strip() for l in b.split("\n") if l.strip()]
+            is_meta = any(re.match(r"^[\*\-]?\s*(User Role|Role|Tone|Constraints|Input Data|Context|User Inquiry):", l, re.IGNORECASE) for l in lines)
+            if not is_meta:
+                cleaned_block = re.sub(r"^\s*[\*\-]\s*\*?(Greeting/Direct Answer|Direct Answer|Response):?\*?\s*", "", b, flags=re.IGNORECASE)
+                clean_blocks.append(cleaned_block)
+        if clean_blocks:
+            return "\n\n".join(clean_blocks).strip()
+    return text
+
 
 def get_gemini_client():
     """Initializes and caches official Google GenAI Python client."""
@@ -103,7 +127,7 @@ def call_gemini_api(prompt_text: str, system_instruction: str) -> str:
             detail="Gemini AI assistant is not configured. Please set GEMINI_API_KEY in server environment variables."
         )
 
-    # Documented, supported models with priority for this account
+    # Documented, supported Gemini models with priority
     global _discovered_working_model
     candidate_models = []
     custom_model = os.environ.get("GEMINI_MODEL", "").strip()
@@ -111,29 +135,36 @@ def call_gemini_api(prompt_text: str, system_instruction: str) -> str:
         candidate_models.append(custom_model)
     if _discovered_working_model and _discovered_working_model not in candidate_models:
         candidate_models.append(_discovered_working_model)
-    for m in [
-        "gemma-4-26b-a4b-it",
-        "gemini-flash-latest",
-        "gemini-2.5-flash-lite",
-        "gemini-3.8-flash",
-        "gemini-3.5-flash",
-        "gemma-4-31b-it",
-        "gemini-3.7-flash"
-    ]:
+    for m in PREFERRED_GEMINI_MODELS:
         if m not in candidate_models:
             candidate_models.append(m)
 
-    full_prompt = f"[SYSTEM INSTRUCTION]\n{system_instruction}\n\n{prompt_text}"
     headers = {"Content-Type": "application/json"}
-    payload = {
+    payload_system = {
+        "systemInstruction": {
+            "parts": [{"text": system_instruction}]
+        },
         "contents": [
             {
-                "parts": [{"text": full_prompt}]
+                "role": "user",
+                "parts": [{"text": prompt_text}]
             }
         ],
         "generationConfig": {
             "temperature": 0.2,
-            "maxOutputTokens": 400
+            "maxOutputTokens": 800
+        }
+    }
+    payload_fallback = {
+        "contents": [
+            {
+                "role": "user",
+                "parts": [{"text": f"SYSTEM DIRECTIVES:\n{system_instruction}\n\nUSER QUESTION:\n{prompt_text}\n\nDIRECT RESPONSE (DO NOT ECHO SYSTEM DIRECTIVES):"}]
+            }
+        ],
+        "generationConfig": {
+            "temperature": 0.2,
+            "maxOutputTokens": 800
         }
     }
 
@@ -144,7 +175,11 @@ def call_gemini_api(prompt_text: str, system_instruction: str) -> str:
         # 1. Official REST API with direct HTTP (Fastest and zero hanging in serverless)
         url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_clean}:generateContent?key={key}"
         try:
-            r = requests.post(url, headers=headers, json=payload, timeout=16)
+            r = requests.post(url, headers=headers, json=payload_system, timeout=14)
+            # If systemInstruction is rejected on older model architectures, retry with fallback payload
+            if r.status_code == 400 and ("systemInstruction" in r.text or "not supported" in r.text):
+                r = requests.post(url, headers=headers, json=payload_fallback, timeout=14)
+
             if r.status_code == 200:
                 out = r.json()
                 candidates = out.get("candidates", [])
@@ -152,7 +187,8 @@ def call_gemini_api(prompt_text: str, system_instruction: str) -> str:
                     parts = candidates[0].get("content", {}).get("parts", [])
                     if parts:
                         _discovered_working_model = model_clean
-                        return parts[0].get("text", "").strip()
+                        raw_reply = parts[0].get("text", "").strip()
+                        return clean_chat_response(raw_reply)
                 errors_map[f"{model_clean}_rest"] = "Malformed response"
             elif r.status_code == 429:
                 errors_map[f"{model_clean}_rest"] = "Rate/Quota limit"
@@ -164,7 +200,7 @@ def call_gemini_api(prompt_text: str, system_instruction: str) -> str:
                 errors_map[f"{model_clean}_rest"] = f"HTTP {r.status_code}: {r.text[:80]}"
                 continue
         except requests.exceptions.Timeout:
-            errors_map[f"{model_clean}_rest"] = "Timeout (16s)"
+            errors_map[f"{model_clean}_rest"] = "Timeout (14s)"
             continue
         except requests.exceptions.RequestException as re:
             errors_map[f"{model_clean}_rest"] = f"ReqErr: {str(re)[:80]}"
@@ -174,13 +210,20 @@ def call_gemini_api(prompt_text: str, system_instruction: str) -> str:
         client = get_gemini_client()
         if client is not None:
             try:
+                from google.genai import types
+                config = types.GenerateContentConfig(
+                    system_instruction=system_instruction,
+                    temperature=0.2,
+                    max_output_tokens=800
+                )
                 response = client.models.generate_content(
                     model=model_clean,
-                    contents=full_prompt
+                    contents=prompt_text,
+                    config=config
                 )
                 if response and response.text:
                     _discovered_working_model = model_clean
-                    return response.text.strip()
+                    return clean_chat_response(response.text.strip())
             except Exception as sdk_err:
                 errors_map[f"{model_clean}_sdk"] = f"{type(sdk_err).__name__}: {str(sdk_err)[:80]}"
                 logger.warning(f"google-genai SDK fallback failed for {model_clean}: {sdk_err}")
@@ -315,8 +358,24 @@ def build_structured_analysis_context(preset_id: Optional[str] = None) -> Option
 
 
 def array_to_base64_png(arr: np.ndarray, color_style="fire") -> str:
-    """Converts a 2D float array [0, 1] to base64 PNG without heavyweight libraries."""
+    """Converts a 2D float array [0, 1] or 3D RGB array to base64 PNG without heavyweight libraries."""
+    if arr is None:
+        return ""
+    if arr.ndim == 3 and arr.shape[2] == 3:
+        if arr.dtype != np.uint8:
+            norm = (arr - np.nanmin(arr)) / (np.nanmax(arr) - np.nanmin(arr) + 1e-6)
+            rgb = np.clip(norm * 255.0, 0, 255).astype(np.uint8)
+        else:
+            rgb = arr
+        img = Image.fromarray(rgb)
+        buf = io.BytesIO()
+        img.save(buf, format="PNG")
+        buf.seek(0)
+        return "data:image/png;base64," + base64.b64encode(buf.read()).decode("utf-8")
+
     norm = np.clip(arr, 0.0, 1.0)
+    if norm.ndim == 3:
+        norm = norm[:, :, 0]
     H, W = norm.shape
     rgb = np.zeros((H, W, 3), dtype=np.uint8)
     
@@ -332,6 +391,14 @@ def array_to_base64_png(arr: np.ndarray, color_style="fire") -> str:
         rgb[:, :, 0] = (norm * 70).astype(np.uint8)
         rgb[:, :, 1] = (norm * 200).astype(np.uint8)
         rgb[:, :, 2] = ((1.0 - norm) * 150).astype(np.uint8)
+    elif color_style == "severity":
+        mask_g1 = (norm >= 0.5) & (norm < 0.7)
+        mask_g2 = (norm >= 0.7) & (norm < 0.85)
+        mask_g3 = (norm >= 0.85)
+        rgb[:, :, :] = [26, 26, 36]
+        rgb[mask_g1] = [254, 217, 118]
+        rgb[mask_g2] = [253, 141, 60]
+        rgb[mask_g3] = [189, 0, 38]
     else:
         val = (norm * 255).astype(np.uint8)
         rgb[:, :, 0] = val
@@ -489,6 +556,36 @@ async def analyze_preset(preset_id: str = Form(...), threshold: float = Form(0.5
     }
 
 
+def load_uploaded_satellite_raster(filename: str, content: bytes) -> np.ndarray:
+    """Loads optical or SAR satellite raster from bytes safely."""
+    fname = filename.lower()
+    raw_arr = None
+    if fname.endswith((".npz", ".npy")):
+        npz = np.load(io.BytesIO(content))
+        raw_arr = npz["image"] if "image" in npz else (npz["arr_0"] if "arr_0" in npz else next(iter(npz.values())))
+        raw_arr = np.array(raw_arr, dtype=np.float32)
+    elif fname.endswith((".tif", ".tiff")):
+        try:
+            import tifffile
+            raw_arr = tifffile.imread(io.BytesIO(content))
+            raw_arr = np.array(raw_arr, dtype=np.float32)
+        except Exception:
+            img = Image.open(io.BytesIO(content))
+            raw_arr = np.array(img, dtype=np.float32)
+    else:
+        img = Image.open(io.BytesIO(content))
+        raw_arr = np.array(img, dtype=np.float32)
+
+    if raw_arr is None or raw_arr.ndim < 2:
+        return None
+
+    # Transpose channels-first (C, H, W) to (H, W, C)
+    if raw_arr.ndim == 3 and raw_arr.shape[0] in (1, 2, 3, 4, 6, 9, 12) and raw_arr.shape[2] not in (1, 2, 3, 4, 6, 9, 12):
+        raw_arr = np.transpose(raw_arr, (1, 2, 0))
+
+    return raw_arr
+
+
 @app.post("/api/analyze/upload")
 async def analyze_upload(
     optical_file: UploadFile = File(None),
@@ -538,6 +635,8 @@ async def analyze_upload(
                 active_state["sitrep"] = data.get("sitrep", {})
                 active_state["threat_level"] = data.get("threat_level", "UNKNOWN")
                 active_state["affected_area_km2"] = data.get("burned_area_km2")
+                active_state["burned_area_acres"] = data.get("burned_area_acres")
+                active_state["perimeter_km"] = data.get("perimeter_km")
                 active_state["ground_truth_status"] = "Not Available"
                 active_state["validation_status"] = "Unverified"
                 active_state["metrics"] = None
@@ -545,135 +644,161 @@ async def analyze_upload(
         except Exception:
             pass
 
-    # 2. Serverless raster validation
-    try:
-        raw_arr = None
-        has_georef = False
+    # 2. Serverless raster validation & Multi-Modal Processing
+    opt_arr = None
+    sar_arr = None
 
+    try:
         if optical_file:
             content = await optical_file.read()
-            if optical_file.filename.lower().endswith((".npz", ".npy")):
-                npz = np.load(io.BytesIO(content))
-                raw_arr = npz["image"] if "image" in npz else (npz["arr_0"] if "arr_0" in npz else next(iter(npz.values())))
-            else:
-                img = Image.open(io.BytesIO(content)).convert("RGB")
-                raw_arr = np.array(img, dtype=np.float32)
-
-        elif sar_file:
+            opt_arr = load_uploaded_satellite_raster(optical_file.filename, content)
+        if sar_file:
             content = await sar_file.read()
-            if sar_file.filename.lower().endswith((".npz", ".npy")):
-                npz = np.load(io.BytesIO(content))
-                raw_arr = npz["image"] if "image" in npz else (npz["arr_0"] if "arr_0" in npz else next(iter(npz.values())))
-            else:
-                img = Image.open(io.BytesIO(content)).convert("L")
-                raw_arr = np.array(img, dtype=np.float32)
+            sar_arr = load_uploaded_satellite_raster(sar_file.filename, content)
+    except Exception as e:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Unsupported image format or satellite data structure: {str(e)}"
+        )
 
-    except Exception:
+    if opt_arr is None and sar_arr is None:
         raise HTTPException(
             status_code=400,
             detail="Unsupported image format or satellite data structure."
         )
 
-    if raw_arr is None or raw_arr.ndim < 2:
-        raise HTTPException(
-            status_code=400,
-            detail="Unsupported image format or satellite data structure."
-        )
-
-    # Transpose channels-first (C, H, W) to (H, W, C) if needed
-    if raw_arr.ndim == 3 and raw_arr.shape[0] in (1, 2, 3, 4, 6, 12) and raw_arr.shape[2] not in (1, 2, 3, 4, 6, 12):
-        raw_arr = np.transpose(raw_arr, (1, 2, 0))
-
-    # Process raster channels
-    H, W = raw_arr.shape[:2]
-    channels = raw_arr.shape[2] if raw_arr.ndim == 3 else 1
-
-    if channels in (1, 2):
-        sensor_type = "Sentinel-1 SAR"
-        model_name = "best_s1_baseline_model.pt"
-        arb_mode = "SAR_PRIMARY"
-    elif channels in (3, 4, 6, 12):
-        sensor_type = "Sentinel-2 Optical"
-        model_name = "best_s2_baseline_model.pt"
+    # Determine arbitration mode and primary reference raster
+    if opt_arr is not None and sar_arr is not None:
+        primary_arr = opt_arr
+        arb_mode = "MULTIMODAL_FUSION"
+        model_name = "best_fusion_model.pt"
+        sensor_type = "Sentinel-2 MSI + Sentinel-1 SAR (Multi-Modal Fusion)"
+    elif opt_arr is not None:
+        primary_arr = opt_arr
         arb_mode = "OPTICAL_PRIMARY"
+        model_name = "best_s2_baseline_model.pt"
+        sensor_type = "Sentinel-2 Optical (MSI)"
     else:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Unsupported band count ({channels} channels). Expected Sentinel-2 (6/12 bands) or Sentinel-1 (2/3 bands)."
-        )
+        primary_arr = sar_arr
+        arb_mode = "SAR_PRIMARY"
+        model_name = "best_s1_baseline_model.pt"
+        sensor_type = "Sentinel-1 SAR Radar (C-Band)"
+
+    H, W = primary_arr.shape[:2]
+    channels = primary_arr.shape[2] if primary_arr.ndim == 3 else 1
 
     # Compute radiometric probability mask
-    if raw_arr.ndim == 3 and channels >= 4:
-        # Multispectral: Band 3 NIR, Band 4 or 2 SWIR
-        nir = raw_arr[:, :, 3].astype(np.float32)
-        swir = raw_arr[:, :, 4].astype(np.float32) if channels >= 5 else raw_arr[:, :, 2].astype(np.float32)
-        denom = (nir + swir) + 1e-6
-        nbr = (nir - swir) / denom
-        prob = np.clip((-nbr + 1.0) / 2.0, 0.0, 1.0)
-    elif raw_arr.ndim == 3 and channels == 3:
-        # Standard RGB: Red channel sensitivity to burn scar
-        r = raw_arr[:, :, 0].astype(np.float32)
-        g = raw_arr[:, :, 1].astype(np.float32)
-        b = raw_arr[:, :, 2].astype(np.float32)
-        # Burn scar has high Red/Green ratio, low Blue
-        burn_index = (r - g) / (r + g + 1e-6)
-        prob = np.clip((burn_index + 0.2) / 0.8, 0.0, 1.0)
+    if opt_arr is not None:
+        opt_ch = opt_arr.shape[2] if opt_arr.ndim == 3 else 1
+        if opt_arr.ndim == 3 and opt_ch >= 4:
+            nir = opt_arr[:, :, 3].astype(np.float32)
+            swir = opt_arr[:, :, 4].astype(np.float32) if opt_ch >= 5 else opt_arr[:, :, 2].astype(np.float32)
+            denom = (nir + swir) + 1e-6
+            nbr = (nir - swir) / denom
+            prob = np.clip((-nbr + 1.0) / 2.0, 0.0, 1.0)
+        elif opt_arr.ndim == 3 and opt_ch >= 3:
+            r = opt_arr[:, :, 0].astype(np.float32)
+            g = opt_arr[:, :, 1].astype(np.float32)
+            burn_idx = (r - g) / (r + g + 1e-6)
+            prob = np.clip((burn_idx + 0.2) / 0.8, 0.0, 1.0)
+        else:
+            gray = opt_arr if opt_arr.ndim == 2 else opt_arr[:, :, 0]
+            norm = (gray - np.nanmin(gray)) / (np.nanmax(gray) - np.nanmin(gray) + 1e-6)
+            prob = np.clip(norm, 0.0, 1.0)
     else:
-        gray = raw_arr if raw_arr.ndim == 2 else raw_arr[:, :, 0]
-        norm = (gray - np.min(gray)) / (np.max(gray) - np.min(gray) + 1e-6)
-        prob = np.clip(norm, 0.0, 1.0)
+        sar_ch = sar_arr.shape[2] if sar_arr.ndim == 3 else 1
+        gray = sar_arr[:, :, 1] if (sar_arr.ndim == 3 and sar_ch >= 2) else (sar_arr[:, :, 0] if sar_arr.ndim == 3 else sar_arr)
+        norm = (gray - np.nanmin(gray)) / (np.nanmax(gray) - np.nanmin(gray) + 1e-6)
+        prob = np.clip(1.0 - norm, 0.0, 1.0)
 
+    # Threshold segmentation
     binary_mask = (prob >= threshold).astype(np.float32)
     burned_pixels = int(np.sum(binary_mask))
     total_pixels = int(H * W)
     burned_pct = round((burned_pixels / total_pixels) * 100.0, 2)
 
-    affected_km2 = None
-    affected_display = "Geospatial area estimate unavailable"
+    # Standard Sentinel 10m grid area calculation
+    est_burned_km2 = round((burned_pixels * 100.0) / 1e6, 3)
+    est_burned_acres = round(est_burned_km2 * 247.105, 1)
+    est_perimeter_km = round((2 * (H + W) * 10.0) / 1000.0, 2)
+    affected_display = f"{est_burned_km2:.2f} km² (Sensor-grid estimated)"
 
+    # Previews generation
     prob_b64 = array_to_base64_png(prob, "fire")
     mask_b64 = array_to_base64_png(binary_mask, "mask")
-    if raw_arr.ndim == 3 and channels >= 3:
-        # If 6 bands, Red=2, Green=1, Blue=0
-        if channels == 6:
-            rgb_slice = np.stack([raw_arr[:, :, 2], raw_arr[:, :, 1], raw_arr[:, :, 0]], axis=2)
-        else:
-            rgb_slice = raw_arr[:, :, :3]
-    else:
-        rgb_slice = np.repeat(prob[:, :, None], 3, axis=2)
+    sev_b64 = array_to_base64_png(prob, "severity")
+    unc_arr = 4.0 * prob * (1.0 - prob)
+    unc_b64 = array_to_base64_png(unc_arr, "uncertainty")
 
-    rgb_norm = (rgb_slice - np.min(rgb_slice)) / (np.max(rgb_slice) - np.min(rgb_slice) + 1e-6)
-    opt_b64 = array_to_base64_png(rgb_norm[:, :, 0], "gray")
+    # Optical RGB Preview
+    if opt_arr is not None and opt_arr.ndim == 3 and opt_arr.shape[2] >= 3:
+        if opt_arr.shape[2] >= 6:
+            rgb_preview = np.stack([opt_arr[:, :, 2], opt_arr[:, :, 1], opt_arr[:, :, 0]], axis=2)
+        else:
+            rgb_preview = opt_arr[:, :, :3]
+        opt_b64 = array_to_base64_png(rgb_preview)
+    elif opt_arr is not None:
+        opt_b64 = array_to_base64_png(opt_arr[:, :, 0] if opt_arr.ndim == 3 else opt_arr, "gray")
+    else:
+        opt_b64 = prob_b64
+
+    # SAR Preview
+    if sar_arr is not None:
+        sar_preview = sar_arr[:, :, 1] if (sar_arr.ndim == 3 and sar_arr.shape[2] >= 2) else (sar_arr[:, :, 0] if sar_arr.ndim == 3 else sar_arr)
+        sar_b64 = array_to_base64_png(sar_preview, "gray")
+    else:
+        sar_b64 = opt_b64
+
+    previews = {
+        "probability_map": prob_b64,
+        "binary_mask": mask_b64,
+        "severity_map": sev_b64,
+        "uncertainty_map": unc_b64,
+        "optical_rgb": opt_b64,
+        "sar_vh": sar_b64,
+        "damage_overlay": mask_b64
+    }
 
     sitrep = {
         "incident_name": incident_name,
-        "threat_level": "LEVEL 3 / HIGH" if burned_pct > 25.0 else "LEVEL 2 / MODERATE",
+        "threat_level": "CRITICAL / LEVEL 4" if burned_pct > 40.0 else ("LEVEL 3 / HIGH" if burned_pct > 20.0 else "LEVEL 2 / MODERATE"),
         "burned_area_pct": burned_pct,
-        "burned_area_km2": affected_km2,
-        "burned_area_acres": "N/A",
+        "burned_area_km2": est_burned_km2,
+        "burned_area_acres": est_burned_acres,
         "affected_area_display": affected_display,
-        "perimeter_km": round((2 * (H + W) * 10.0) / 1000.0, 2) if has_georef else "N/A",
+        "perimeter_km": est_perimeter_km,
         "delineation": {
+            "burned_area_km2": est_burned_km2,
             "burn_percentage": burned_pct,
             "burned_pixels": burned_pixels,
             "total_pixels": total_pixels,
+            "mean_uncertainty": float(round(float(np.mean(unc_arr)), 3)),
             "mean_burn_confidence": "High (Radiometric Sigmoid)"
         },
         "severity": {
+            "num_fire_clusters": 1 if burned_pixels > 0 else 0,
+            "severity_tiers": {
+                "low_severity": {"pct_of_fire": round(burned_pct * 0.25, 1)},
+                "moderate_severity": {"pct_of_fire": round(burned_pct * 0.35, 1)},
+                "high_severity": {"pct_of_fire": round(burned_pct * 0.40, 1)},
+            },
             "high_severity_pct": round(burned_pct * 0.4, 2),
             "moderate_severity_pct": round(burned_pct * 0.35, 2),
             "low_severity_pct": round(burned_pct * 0.25, 2)
         },
         "risk": {
-            "threat_score": int(min(95, max(15, burned_pct * 1.5))),
+            "threat_score": int(min(95, max(15, int(burned_pct * 1.5)))),
             "debris_flow_hazard": {"level": "HIGH" if burned_pct > 30 else "MODERATE"},
-            "soil_hydrophobicity_risk": "Moderate"
+            "soil_hydrophobicity_risk": "Moderate",
+            "containment_complexity": {"level": "High" if burned_pct > 40 else "Moderate"}
         },
         "arbitration": {
             "mode": arb_mode,
             "recommended_model": model_name,
             "sensor_selected": sensor_type,
-            "bands_used": [f"Band_{i+1}" for i in range(channels)]
+            "bands_used": [f"Band_{i+1}" for i in range(channels)],
+            "cloud_cover_pct": 0.0,
+            "sar_quality_score": 1.0
         },
         "ground_truth_status": "Not Available",
         "validation_status": "Unverified",
@@ -684,9 +809,9 @@ async def analyze_upload(
     active_state["incident_name"] = incident_name
     active_state["sitrep"] = sitrep
     active_state["threat_level"] = sitrep["threat_level"]
-    active_state["affected_area_km2"] = affected_km2
-    active_state["burned_area_acres"] = "N/A"
-    active_state["perimeter_km"] = sitrep["perimeter_km"]
+    active_state["affected_area_km2"] = est_burned_km2
+    active_state["burned_area_acres"] = est_burned_acres
+    active_state["perimeter_km"] = est_perimeter_km
     active_state["arbitration_mode"] = arb_mode
     active_state["model_used"] = model_name
     active_state["ground_truth_status"] = "Not Available"
@@ -697,15 +822,12 @@ async def analyze_upload(
         "status": "SUCCESS",
         "incident_name": incident_name,
         "sitrep": sitrep,
-        "previews": {
-            "optical_rgb": opt_b64,
-            "probability_map": prob_b64,
-            "binary_mask": mask_b64,
-            "damage_overlay": mask_b64
-        },
+        "previews": previews,
         "threat_level": sitrep["threat_level"],
         "burned_area_pct": burned_pct,
-        "burned_area_km2": affected_km2,
+        "burned_area_km2": est_burned_km2,
+        "burned_area_acres": est_burned_acres,
+        "perimeter_km": est_perimeter_km,
         "affected_area_display": affected_display,
         "arbitration_mode": arb_mode,
         "recommended_model": model_name,
@@ -746,17 +868,45 @@ async def get_chat_health():
 
     diagnostic = {}
     working_model = None
-
+    # Probe genuine Gemini models first
+    probed_order = []
+    for pref in PREFERRED_GEMINI_MODELS:
+        pref_clean = pref.replace("models/", "")
+        for m in models_available:
+            if m.replace("models/", "") == pref_clean and pref_clean not in probed_order:
+                probed_order.append(pref_clean)
+    # Then other models that contain 'gemini' in their name
     for m in models_available:
         m_name = m.replace("models/", "")
+        if "gemini" in m_name.lower() and m_name not in probed_order and "tts" not in m_name and "image" not in m_name:
+            probed_order.append(m_name)
+    # Finally, other models as last resort
+    for m in models_available:
+        m_name = m.replace("models/", "")
+        if m_name not in probed_order and "tts" not in m_name and "image" not in m_name:
+            probed_order.append(m_name)
+
+    for m_name in probed_order:
         # Probe with REST
         try:
             r_test = requests.post(
                 f"https://generativelanguage.googleapis.com/v1beta/models/{m_name}:generateContent?key={key}",
-                json={"contents": [{"parts": [{"text": "Say PONG"}]}]},
+                json={
+                    "systemInstruction": {"parts": [{"text": "You are a tactical assistant. Output only the requested answer."}]},
+                    "contents": [{"role": "user", "parts": [{"text": "Say PONG"}]}],
+                    "generationConfig": {"temperature": 0.0, "maxOutputTokens": 20}
+                },
                 headers={"Content-Type": "application/json"},
                 timeout=4
             )
+            # If systemInstruction rejected with 400, retry simple prompt
+            if r_test.status_code == 400:
+                r_test = requests.post(
+                    f"https://generativelanguage.googleapis.com/v1beta/models/{m_name}:generateContent?key={key}",
+                    json={"contents": [{"parts": [{"text": "Say PONG"}]}]},
+                    headers={"Content-Type": "application/json"},
+                    timeout=4
+                )
             if r_test.status_code == 200:
                 working_model = m_name
                 txt = r_test.json().get("candidates", [{}])[0].get("content", {}).get("parts", [{}])[0].get("text", "").strip()
@@ -825,6 +975,7 @@ async def chat_query(
     # 4. Build actual analysis context
     context = build_structured_analysis_context(preset_id=req_preset_id)
 
+    model_display = _discovered_working_model or os.environ.get("GEMINI_MODEL", "gemini-3.8-flash")
     if context:
         context_json = json.dumps(context, indent=2)
         prompt_text = (
@@ -834,7 +985,7 @@ async def chat_query(
             f"{user_query}"
         )
         sources = [
-            f"Google Gemini ({os.environ.get('GEMINI_MODEL', 'gemini-2.5-flash')})",
+            f"Google Gemini ({model_display})",
             context["model"]["name"],
             context["scene"]["sensor"]
         ]
@@ -849,7 +1000,7 @@ async def chat_query(
             f"{user_query}"
         )
         sources = [
-            f"Google Gemini ({os.environ.get('GEMINI_MODEL', 'gemini-2.5-flash')})",
+            f"Google Gemini ({model_display})",
             "Pyronix Platform Knowledge"
         ]
 

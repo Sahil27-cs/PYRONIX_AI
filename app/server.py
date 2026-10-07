@@ -441,7 +441,7 @@ async def tactical_chatbot_query(request: Request, query: str = Form(None)):
             f"{json.dumps(context, indent=2)}\n\n"
             f"[USER INQUIRY]\n{user_query}"
         )
-        sources = [f"Google Gemini ({os.environ.get('GEMINI_MODEL', 'gemini-2.5-flash')})", arb.get("recommended_model", "ResNet-34 U-Net")]
+        sources = [f"Google Gemini ({os.environ.get('GEMINI_MODEL', 'gemini-3.8-flash')})", arb.get("recommended_model", "ResNet-34 U-Net")]
     else:
         prompt_text = (
             f"[ACTIVE SATELLITE WILDFIRE ANALYSIS CONTEXT]\n"
@@ -450,21 +450,24 @@ async def tactical_chatbot_query(request: Request, query: str = Form(None)):
             f"If the user asks for specific incident metrics, burned area, confidence, or validation, explicitly explain that no scene is currently analyzed.\n\n"
             f"[USER INQUIRY]\n{user_query}"
         )
-        sources = [f"Google Gemini ({os.environ.get('GEMINI_MODEL', 'gemini-2.5-flash')})", "Pyronix Platform Knowledge"]
+        sources = [f"Google Gemini ({os.environ.get('GEMINI_MODEL', 'gemini-3.8-flash')})", "Pyronix Platform Knowledge"]
 
     system_instruction = (
-        "You are the AI assistant for PYRONIX AI, an AI-powered satellite wildfire and burned-area intelligence platform.\n\n"
-        "You explain satellite wildfire analysis clearly and scientifically.\n"
-        "You must only make claims supported by the analysis data and project context provided to you.\n\n"
-        "Never fabricate:\n"
-        "- burned area\n- affected area\n- confidence\n- probability\n- IoU\n- Dice\n- precision\n- recall\n"
-        "- ground truth\n- severity\n- sensor measurements\n- satellite observations\n\n"
-        "If a value is unavailable, explicitly say it is unavailable.\n"
-        "If ground truth is unavailable, explain that quantitative validation metrics cannot be calculated.\n"
-        "Distinguish clearly between model prediction, reference/ground truth, and derived estimates."
+        "You are the tactical AI assistant for PYRONIX AI, an AI-powered satellite wildfire intelligence and burned-area segmentation platform.\n\n"
+        "CRITICAL RESPONSE FORMAT RULES:\n"
+        "1. Respond directly to the user in clean, concise, professional Markdown.\n"
+        "2. NEVER output internal prompt analysis, meta-commentary, constraint checklists, role summaries, or chain-of-thought scratchpads (e.g. NEVER output '* User Role:', '* Role:', '* Constraints:', '* Tone:', '* Context:', '* User Inquiry:').\n"
+        "3. Begin your response immediately with the direct tactical answer to the user's question.\n\n"
+        "SCIENTIFIC GUIDELINES:\n"
+        "- Explain satellite wildfire analysis clearly and scientifically.\n"
+        "- You must only make claims supported by the analysis data and project context provided to you.\n"
+        "- Never fabricate: burned area, affected area, confidence, probability, IoU, Dice, precision, recall, ground truth, severity, sensor measurements, or satellite observations.\n"
+        "- If a value is unavailable, explicitly state that it is unavailable.\n"
+        "- If ground truth is unavailable, explain that quantitative validation metrics cannot be calculated.\n"
+        "- Distinguish clearly between model prediction, reference/ground truth, and derived estimates."
     )
 
-    model_name = os.environ.get("GEMINI_MODEL", "gemini-2.5-flash").strip() or "gemini-2.5-flash"
+    model_name = os.environ.get("GEMINI_MODEL", "gemini-3.8-flash").strip() or "gemini-3.8-flash"
     try:
         from google import genai
         from google.genai import types
@@ -472,7 +475,7 @@ async def tactical_chatbot_query(request: Request, query: str = Form(None)):
         config = types.GenerateContentConfig(
             system_instruction=system_instruction,
             temperature=0.2,
-            max_output_tokens=1024
+            max_output_tokens=800
         )
         response = client.models.generate_content(
             model=model_name,
@@ -485,17 +488,24 @@ async def tactical_chatbot_query(request: Request, query: str = Form(None)):
         import requests
         url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={key}"
         payload = {
-            "system_instruction": {"parts": [{"text": system_instruction}]},
-            "contents": [{"parts": [{"text": prompt_text}]}],
-            "generationConfig": {"temperature": 0.2, "maxOutputTokens": 1024}
+            "systemInstruction": {"parts": [{"text": system_instruction}]},
+            "contents": [{"role": "user", "parts": [{"text": prompt_text}]}],
+            "generationConfig": {"temperature": 0.2, "maxOutputTokens": 800}
         }
-        r = requests.post(url, json=payload, timeout=12)
+        r = requests.post(url, json=payload, timeout=14)
         if r.status_code == 200:
             reply = r.json()["candidates"][0]["content"]["parts"][0]["text"].strip()
         elif r.status_code == 429:
             raise HTTPException(status_code=429, detail="AI request limit reached. Please try again later.")
         else:
             raise HTTPException(status_code=r.status_code, detail="Gemini is temporarily unavailable. Please try again.")
+
+    # Strip any potential model scratchpad echoes
+    if reply and any(reply.strip().startswith(prefix) for prefix in ["* User Role:", "* Role:", "* Tone:", "* Constraints:"]):
+        blocks = [b.strip() for b in reply.split("\n\n") if b.strip()]
+        valid_blocks = [b for b in blocks if not any(b.strip().startswith(p) for p in ["* User Role:", "* Role:", "* Constraints:", "* Context:"])]
+        if valid_blocks:
+            reply = "\n\n".join(valid_blocks).strip()
 
     return {
         "status": "SUCCESS",

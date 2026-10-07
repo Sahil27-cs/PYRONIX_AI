@@ -296,25 +296,34 @@ document.addEventListener("DOMContentLoaded", () => {
         hudThreatBadge.className = "threat-badge " + (threatLevel.toLowerCase().includes("crit") ? "threat-critical" : "threat-high");
 
         const riskData = sitrep.risk || {};
-        hudThreatScore.textContent = `${riskData.threat_score || 0}/100`;
+        hudThreatScore.textContent = `${riskData.threat_score !== undefined ? riskData.threat_score : 0}/100`;
 
-        if (data.affected_area_display && data.affected_area_display.includes("unavailable")) {
+        if (data.affected_area_display && String(data.affected_area_display).toLowerCase().includes("unavailable")) {
             hudBurnedKm2.textContent = "N/A";
             hudBurnedAcres.textContent = "(Geospatial area unavailable)";
-        } else if (data.burned_area_km2 !== null && data.burned_area_km2 !== undefined && data.burned_area_km2 > 0) {
-            hudBurnedKm2.textContent = (data.burned_area_km2).toFixed(2);
-            hudBurnedAcres.textContent = `(${(data.burned_area_acres || 0).toFixed(1)} acres)`;
+        } else if (typeof data.burned_area_km2 === "number" && data.burned_area_km2 > 0) {
+            hudBurnedKm2.textContent = data.burned_area_km2.toFixed(2);
+            hudBurnedAcres.textContent = typeof data.burned_area_acres === "number"
+                ? `(${data.burned_area_acres.toFixed(1)} acres)`
+                : `(${(data.burned_area_km2 * 247.105).toFixed(1)} acres)`;
         } else {
             hudBurnedKm2.textContent = "N/A";
             hudBurnedAcres.textContent = "(Geospatial area unavailable)";
         }
-        hudPerimeterKm.textContent = (data.perimeter_km || 0).toFixed(2);
+
+        if (typeof data.perimeter_km === "number" && data.perimeter_km > 0) {
+            hudPerimeterKm.textContent = data.perimeter_km.toFixed(2);
+        } else if (typeof data.perimeter_km === "string" && data.perimeter_km !== "N/A") {
+            hudPerimeterKm.textContent = data.perimeter_km;
+        } else {
+            hudPerimeterKm.textContent = "N/A";
+        }
 
         // Ground Truth Validation Status (Scientific Rule)
         const hudGtBadge = document.getElementById("hud-gt-badge");
         const hudGtDesc = document.getElementById("hud-gt-desc");
         if (hudGtBadge && hudGtDesc) {
-            const gtStatus = data.ground_truth_status || (data.ground_truth && data.ground_truth.status) || "Available";
+            const gtStatus = String(data.ground_truth_status || (data.ground_truth && data.ground_truth.status) || "Available");
             if (gtStatus.toLowerCase().includes("not available") || gtStatus.toLowerCase().includes("unverified")) {
                 hudGtBadge.textContent = "NOT AVAILABLE";
                 hudGtBadge.className = "hazard-chip hazard-high";
@@ -327,27 +336,28 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         const sevData = sitrep.severity || {};
-        hudClusters.textContent = `${sevData.num_fire_clusters || 1} clusters`;
+        hudClusters.textContent = `${sevData.num_fire_clusters !== undefined ? sevData.num_fire_clusters : 1} clusters`;
 
         hudModelUsed.textContent = data.recommended_model || "Dual-Pol ResNet";
         hudArbitrationMode.textContent = data.arbitration_mode || "Optical";
 
         const debrisData = riskData.debris_flow_hazard || {};
-        const dLevel = (debrisData.level || "MODERATE").toUpperCase();
+        const dLevel = String(debrisData.level || "MODERATE").toUpperCase();
         hudDebrisHazard.textContent = dLevel;
         hudDebrisHazard.className = "hazard-chip " + (dLevel.includes("HIGH") ? "hazard-high" : (dLevel.includes("MOD") ? "hazard-mod" : "hazard-low"));
         hudHydroRisk.textContent = `Hydrophobicity: ${riskData.soil_hydrophobicity_risk || 'Moderate'}`;
 
         // Update Agent Telemetry Cards
         const arbData = sitrep.arbitration || {};
-        arbCloud.textContent = `${(arbData.cloud_cover_pct || 0).toFixed(1)}%`;
-        arbSar.textContent = `${(arbData.sar_quality_score || 1.0).toFixed(2)}`;
-        arbModel.textContent = arbData.recommended_model || "S2_RGB_only";
+        arbCloud.textContent = `${(parseFloat(arbData.cloud_cover_pct) || 0).toFixed(1)}%`;
+        arbSar.textContent = `${(parseFloat(arbData.sar_quality_score) || 1.0).toFixed(2)}`;
+        arbModel.textContent = arbData.recommended_model || data.recommended_model || "best_fusion_model.pt";
 
         const delData = sitrep.delineation || {};
-        delExtent.textContent = `${(delData.burned_area_km2 || 0).toFixed(2)} km²`;
-        delCoverage.textContent = `${(delData.burn_percentage || 0).toFixed(1)}%`;
-        delUncertainty.textContent = `${(delData.mean_uncertainty || 0.05).toFixed(3)}`;
+        const areaVal = typeof delData.burned_area_km2 === "number" ? delData.burned_area_km2 : (typeof data.burned_area_km2 === "number" ? data.burned_area_km2 : 0);
+        delExtent.textContent = `${areaVal.toFixed(2)} km²`;
+        delCoverage.textContent = `${(parseFloat(delData.burn_percentage) || parseFloat(data.burned_area_pct) || 0).toFixed(1)}%`;
+        delUncertainty.textContent = `${(parseFloat(delData.mean_uncertainty) || 0.05).toFixed(3)}`;
 
         const tiers = sevData.severity_tiers || {};
         sevG1.textContent = `${tiers.low_severity?.pct_of_fire || 0}%`;
@@ -355,8 +365,8 @@ document.addEventListener("DOMContentLoaded", () => {
         sevG3.textContent = `${tiers.high_severity?.pct_of_fire || 0}%`;
 
         riskDebris.textContent = dLevel;
-        riskContain.textContent = riskData.containment_complexity?.level || "Moderate";
-        riskScore.textContent = `${riskData.threat_score || 0}/100`;
+        riskContain.textContent = (riskData.containment_complexity && riskData.containment_complexity.level) || "Moderate";
+        riskScore.textContent = `${riskData.threat_score !== undefined ? riskData.threat_score : 0}/100`;
 
         orchState.textContent = "Dispatched";
         orchTime.textContent = new Date().toLocaleTimeString();
@@ -364,13 +374,35 @@ document.addEventListener("DOMContentLoaded", () => {
         // Switch to probability map by default
         selectLayer("probability_map");
 
-        // Inform Chatbot with auto notification
+        // Inform Chatbot with auto notification safely
+        let burnedText = "Geospatial area estimate unavailable";
+        if (typeof data.burned_area_km2 === "number" && data.burned_area_km2 > 0) {
+            const acresVal = typeof data.burned_area_acres === "number"
+                ? data.burned_area_acres.toFixed(1)
+                : (data.burned_area_km2 * 247.105).toFixed(1);
+            burnedText = `**${data.burned_area_km2.toFixed(2)} km²** (${acresVal} acres)`;
+        } else if (data.burned_area_pct !== undefined && data.burned_area_pct !== null) {
+            burnedText = `**${data.burned_area_pct}% raster coverage** (unprojected sensor grid)`;
+        }
+
+        let perimText = "Sensor boundary unprojected";
+        if (typeof data.perimeter_km === "number" && data.perimeter_km > 0) {
+            perimText = `**${data.perimeter_km.toFixed(2)} km**`;
+        } else if (typeof data.perimeter_km === "string" && data.perimeter_km !== "N/A") {
+            perimText = `**${data.perimeter_km}**`;
+        }
+
+        const clusterCount = (sevData && typeof sevData.num_fire_clusters === "number") ? sevData.num_fire_clusters : 1;
+        const hazardScore = (riskData && riskData.threat_score !== undefined) ? riskData.threat_score : 0;
+        const recModel = data.recommended_model || "Dual-Pol ResNet";
+        const arbRouting = data.arbitration_mode || "Optical";
+
         appendBotMessage(
-            `**Analysis Complete for ${data.incident_name}**\n` +
-            `• Burned Area: **${data.burned_area_km2.toFixed(2)} km²** (${data.burned_area_acres.toFixed(1)} acres)\n` +
-            `• Perimeter: **${data.perimeter_km.toFixed(2)} km** across ${sevData.num_fire_clusters || 1} distinct fire clusters\n` +
-            `• Overall Threat: **${threatLevel}** (Hazard Score: ${riskData.threat_score}/100)\n` +
-            `• Sensor Arbitration: Model **${data.recommended_model}** selected via **${data.arbitration_mode}** routing.\n\n` +
+            `**Analysis Complete for ${data.incident_name || 'Uploaded Satellite Imagery'}**\n` +
+            `• Burned Area: ${burnedText}\n` +
+            `• Perimeter: ${perimText} across ${clusterCount} distinct fire cluster${clusterCount === 1 ? '' : 's'}\n` +
+            `• Overall Threat: **${threatLevel}** (Hazard Score: ${hazardScore}/100)\n` +
+            `• Sensor Arbitration: Model **${recModel}** selected via **${arbRouting}** routing.\n\n` +
             `You can now inspect all satellite layers or ask tactical questions.`
         );
     }
@@ -779,6 +811,26 @@ document.addEventListener("DOMContentLoaded", () => {
             setTimeout(() => toast.remove(), 300);
         }, 4000);
     }
+
+    // Focus and highlight chatbot helper
+    function focusChatbot() {
+        const chatCard = document.querySelector(".chat-card") || document.querySelector(".intel-panel");
+        if (chatCard) {
+            chatCard.scrollIntoView({ behavior: "smooth", block: "center" });
+            chatCard.classList.remove("chat-highlight-pulse");
+            void chatCard.offsetWidth;
+            chatCard.classList.add("chat-highlight-pulse");
+        }
+        const chatIn = document.getElementById("chat-input");
+        if (chatIn) {
+            setTimeout(() => chatIn.focus(), 300);
+        }
+    }
+
+    const btnHeaderChat = document.getElementById("btn-header-chat");
+    if (btnHeaderChat) btnHeaderChat.addEventListener("click", focusChatbot);
+    const btnFloatChat = document.getElementById("btn-floating-chat");
+    if (btnFloatChat) btnFloatChat.addEventListener("click", focusChatbot);
 
     // =========================================================================
     // 7. INITIAL BOOTSTRAP
